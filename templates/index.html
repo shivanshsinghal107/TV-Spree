@@ -1,0 +1,15 @@
+{% extends "layout.html" %}
+
+{% block heading %}
+  Home
+{% endblock %}
+
+{% block body %}
+  {% if loginstatus == 'True' %}
+    <a href = "/">Hey {{curruser}}</a>
+    <a href = "/logout">Logout</a>
+  {% else %}
+    <a href = "/login">Login</a>
+    <a href = "/register">Register</a>
+  {% endif %}
+{% endblock %}
