@@ -80,16 +80,25 @@ def logout():
 @app.route("/search", methods = ['GET', 'POST'])
 def search():
     if request.method == 'POST':
-        query = request.form.get("search")
-        res = ia.search_movie(query)
-        print(len(res))
+        title = request.form.get("search")
         movies = []
-        movie = ia.get_movie(res[0].movieID)
-        movies.append(movie)
-        if session.get("logged_in"):
-            return render_template("search.html", movies = movies, res = res, loginstatus = 'True', curruser = session["username"])
+        query = 'SELECT * FROM movies WHERE ' + 'title LIKE \'%'+title+'%\''
+        data = db.execute(query).fetchall()
+        if len(data) <= 0:
+            access = 'imdb'
+            res = ia.search_movie(title)
+            print(len(res))
+            movie = ia.get_movie(res[0].movieID)
+            movies.append(movie)
         else:
-            return render_template("search.html", movies = movies, res = res, loginstatus = 'False')
+            access = 'local'
+            for d in data:
+                movies.append(d)
+        if session.get("logged_in"):
+            return render_template("search.html", movies = movies, loginstatus = 'True', curruser = session["username"],
+                                    access = access)
+        else:
+            return render_template("search.html", movies = movies, loginstatus = 'False', access = access)
     else:
         return "<script>alert('Please enter the search query');window.location = 'http://127.0.0.1:5000/';</script>"
 
@@ -115,8 +124,13 @@ def addWatched(id):
             m = ia.get_movie(id)
             genres = ""
             for g in m['genres']:
-                genres += g + " "
-            db.execute("INSERT INTO movies (id, title, release_date, rating, genres, duration, summary) VALUES (:id, :title, :release_date, :rating, :genres, :duration, :summary)", {"id": id, "title": m['title'], "release_date": m['original air date'][:11], "rating": m['rating'], "genres": genres, "duration": m['runtimes'][0], "summary": m['plot outline']})
+                genres += g + ", "
+            genres = genres[:-2]
+            cast = ""
+            for c in m['cast'][:5]:
+                cast += c['name'] + f"({c.currentRole}), "
+            cast = cast[:-2]
+            db.execute("INSERT INTO movies (id, title, release_date, rating, cast, genres, duration, summary, cover_url) VALUES (:id, :title, :release_date, :rating, :cast, :genres, :duration, :summary, :cover_url)", {"id": id, "title": m['title'], "release_date": m['original air date'][:11], "rating": m['rating'], "cast": cast, "genres": genres, "duration": m['runtimes'][0], "summary": m['plot outline'], "cover_url": m['full-size cover url']})
             db.commit()
             print(f"{m['title']} inserted")
         db.execute("INSERT INTO mwatched (wid, username) VALUES (:wid, :username)", {"wid": id, "username": session["username"]})
