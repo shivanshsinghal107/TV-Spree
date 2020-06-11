@@ -1,0 +1,23 @@
+{% extends "layout.html" %}
+
+{% block heading %}
+  {{curruser}}'s Watched List
+{% endblock %}
+
+{% block body %}
+  <a href="/">Home</a>
+  <a href = "/">Hey {{curruser}}</a>
+  <a href = "/logout">Logout</a>
+  <br><br>
+  {% for m in movies %}
+    <!--img src="{{m['cover_url']}}" style="width:150px;height:225px;margin-right:15px;float:left;" alt="cover photo"-->
+    <h5>
+      <div>{{loop.index}}. Title: {{m.title}}</div>
+      <div>Genres: {{m.genres}}</div>
+      <div>Release Date: {{m.release_date}}</div>
+      <div>Duration: {{m.duration}} minutes</div>
+      <div>Rating: {{m.rating}}</div>
+    </h5>
+    <br>
+  {% endfor %}
+{% endblock %}
