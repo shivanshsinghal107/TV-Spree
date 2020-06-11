@@ -5,6 +5,8 @@
 {% endblock %}
 
 {% block body %}
+  <a href="/">Home</a>
+  <a href="/register">Register</a>
   <form action="{{ url_for('login') }}" method="post">
     <div class="form-group">
       <label for="username">Username</label>
