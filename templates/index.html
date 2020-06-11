@@ -7,9 +7,16 @@
 {% block body %}
   {% if loginstatus == 'True' %}
     <a href = "/">Hey {{curruser}}</a>
+    <a href="/watched/{{curruser}}">My Watch list</a>
     <a href = "/logout">Logout</a>
   {% else %}
     <a href = "/login">Login</a>
     <a href = "/register">Register</a>
   {% endif %}
+  <br><br>
+  <form action="{{ url_for('search') }}" method="post">
+  <input type="text" name="search" class="form-control" id="search" placeholder="Search">
+  <br>
+  <button type="submit" class="btn btn-primary">Search</button>
+  </form>
 {% endblock %}
