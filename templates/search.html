@@ -1,0 +1,33 @@
+{% extends "layout.html" %}
+
+{% block heading %}
+  Search Results
+{% endblock %}
+
+{% block body %}
+  <a href="/">Home</a>
+  {% if loginstatus == 'True' %}
+    <a href = "/">Hey {{curruser}}</a>
+    <a href="/watched/{{curruser}}">My Watch list</a>
+    <a href = "/logout">Logout</a>
+  {% else %}
+    <a href = "/login">Login</a>
+    <a href = "/register">Register</a>
+  {% endif %}
+  <br><br>
+  {% for movie in movies %}
+    <img src="{{movie['full-size cover url']}}" style="width:200px;height:300px;margin-right:15px;float:left;" alt="cover photo">
+    <div>ID: {{movie.movieID}}</div>
+    <div>Title: {{movie['title']}}</div>
+    <div>Release Date: {{movie['original air date']}}</div>
+    <div>Kind: {{movie['kind']}}</div>
+    <div>Rating: {{movie['rating']}}</div>
+    <div>Duration: {{movie['runtimes'][0]}} minutes</div>
+    <div>Genres: {{movie['genres']}}</div>
+    <br>
+    <div>Movie Plot:<br>{{movie['plot outline']}}</div>
+    <form action="{{url_for('addWatched', id = movie.movieID)}}">
+        <button type="submit" class="btn btn-primary">Watched</button>
+    </form>
+  {% endfor %}
+{% endblock %}
