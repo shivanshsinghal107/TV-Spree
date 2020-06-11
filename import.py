@@ -23,11 +23,11 @@ db.execute('''CREATE TABLE IF NOT EXISTS email (mail VARCHAR(64) NOT NULL, usern
             FOREIGN KEY(username) REFERENCES users(username) ON DELETE CASCADE ON UPDATE CASCADE,
             PRIMARY KEY(mail, username))''')
 #origin, status, person['full-size headshot']
-db.execute('''CREATE TABLE IF NOT EXISTS movies (id INTEGER NOT NULL, title VARCHAR(64), release_date text,
-            rating FLOAT, cast text, genres VARCHAR(100), duration INTEGER, summary text, cover_url text, PRIMARY KEY(id))''')
+db.execute('''CREATE TABLE IF NOT EXISTS movies (id INTEGER NOT NULL, title VARCHAR(64), release_date text, rating FLOAT,
+            cast text, genres VARCHAR(100), duration INTEGER, summary text, cover_url text, PRIMARY KEY(id))''')
 #origin, status, person['full-size headshot']
-db.execute('''CREATE TABLE IF NOT EXISTS series (id INTEGER NOT NULL, title VARCHAR(64), release_date text,
-            rating FLOAT, cast text, season INTEGER, episodes INTEGER, duration INTEGER, genres VARCHAR(100), summary text, next_episode text, cover_url text, PRIMARY KEY(id))''')
+db.execute('''CREATE TABLE IF NOT EXISTS series (id INTEGER NOT NULL, title VARCHAR(64), release_date text, rating FLOAT,
+            cast text, season INTEGER, episodes INTEGER, duration INTEGER, genres VARCHAR(100), summary text, next_episode text, cover_url text, PRIMARY KEY(id))''')
 db.execute('''CREATE TABLE IF NOT EXISTS mwatched (id INTEGER PRIMARY KEY AUTOINCREMENT, wid INTEGER NOT NULL,
             username VARCHAR(16) NOT NULL, FOREIGN KEY(username) REFERENCES users(username) ON DELETE CASCADE ON UPDATE CASCADE,
             FOREIGN KEY(wid) REFERENCES movies(id) ON DELETE CASCADE ON UPDATE CASCADE)''')
