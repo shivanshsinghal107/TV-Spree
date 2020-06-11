@@ -7,6 +7,8 @@ from flask_session import Session
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 
+ia = imdb.IMDb()
+
 app = Flask(__name__)
 
 # Configure session to use filesystem
@@ -25,9 +27,6 @@ def index():
         return render_template("index.html", loginstatus = 'True', curruser = curruser)
     else:
         return render_template("index.html", loginstatus = 'False')
-#    i = imdb.IMDb(accessSystem='http')
-#    results = i.search_movie('the matrix')
-#    return results
 
 @app.route("/register", methods = ['GET', 'POST'])
 def register():
@@ -77,3 +76,51 @@ def logout():
     session.clear()
     print(session.keys())
     return redirect("http://127.0.0.1:5000")
+
+@app.route("/search", methods = ['GET', 'POST'])
+def search():
+    if request.method == 'POST':
+        query = request.form.get("search")
+        res = ia.search_movie(query)
+        print(len(res))
+        movies = []
+        movie = ia.get_movie(res[0].movieID)
+        movies.append(movie)
+        if session.get("logged_in"):
+            return render_template("search.html", movies = movies, res = res, loginstatus = 'True', curruser = session["username"])
+        else:
+            return render_template("search.html", movies = movies, res = res, loginstatus = 'False')
+    else:
+        return "<script>alert('Please enter the search query');window.location = 'http://127.0.0.1:5000/';</script>"
+
+@app.route("/watched/<username>", methods = ['GET'])
+def watched(username):
+    if session.get("logged_in"):
+        username = session["username"]
+        watchedMovies = db.execute("SELECT * FROM mwatched WHERE username = :username", {"username": username}).fetchall()
+        movies = []
+        for m in watchedMovies:
+            id = m.wid
+            data = db.execute("SELECT * FROM movies WHERE id = :id", {"id": id}).fetchall()[0]
+            movies.append(data)
+        return render_template("watched.html", curruser = username, movies = movies)
+    else:
+        return "<script>alert('Please Login first'); window.location = 'http://127.0.0.1:5000/login';</script>"
+
+@app.route("/addWatched/<id>", methods = ['GET', 'POST'])
+def addWatched(id):
+    if session.get("logged_in"):
+        data = db.execute("SELECT * FROM movies WHERE id = :id", {"id": id}).fetchall()
+        if len(data) <= 0:
+            m = ia.get_movie(id)
+            genres = ""
+            for g in m['genres']:
+                genres += g + " "
+            db.execute("INSERT INTO movies (id, title, release_date, rating, genres, duration, summary) VALUES (:id, :title, :release_date, :rating, :genres, :duration, :summary)", {"id": id, "title": m['title'], "release_date": m['original air date'][:11], "rating": m['rating'], "genres": genres, "duration": m['runtimes'][0], "summary": m['plot outline']})
+            db.commit()
+            print(f"{m['title']} inserted")
+        db.execute("INSERT INTO mwatched (wid, username) VALUES (:wid, :username)", {"wid": id, "username": session["username"]})
+        db.commit()
+        return "<script>alert('Added to Watched list'); window.location = 'http://127.0.0.1:5000/';</script>"
+    else:
+        return "<script>alert('Please Login first'); window.location = 'http://127.0.0.1:5000/login';</script>"
