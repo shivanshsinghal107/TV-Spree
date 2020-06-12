@@ -93,11 +93,9 @@ def search():
             res = ia.search_movie(title)
             print(len(res), res[0]['kind'])
             movie = ia.get_movie(res[0].movieID)
-            if 'movie' in movie['kind']:
-                movies.append(movie)
-            elif 'series' in movie['kind']:
+            if 'series' in movie['kind']:
                 ia.update(movie, 'episodes')
-                movies.append(movie)
+            movies.append(movie)
         else:
             access = 'local'
             for d in data:
@@ -116,11 +114,22 @@ def watched(username):
     if session.get("logged_in"):
         username = session["username"]
         watchedMovies = db.execute("SELECT * FROM mwatched WHERE username = :username", {"username": username}).fetchall()
+        watchedSeries = db.execute("SELECT * FROM swatched WHERE username = :username", {"username": username}).fetchall()
         movies = []
         for m in watchedMovies:
             id = m.wid
-            data = db.execute("SELECT * FROM movies WHERE id = :id", {"id": id}).fetchall()[0]
-            movies.append(data)
+            data = db.execute("SELECT * FROM movies WHERE id = :id", {"id": id}).fetchall()
+            if len(data) > 0:
+                movies.append(data[0])
+            else:
+                break
+        for s in watchedSeries:
+            id = s.wid
+            data = db.execute("SELECT * FROM series WHERE id = :id", {"id": id}).fetchall()
+            if len(data) > 0:
+                movies.append(data[0])
+            else:
+                break
         db.close()
         return render_template("watched.html", curruser = username, movies = movies)
     else:
@@ -129,8 +138,9 @@ def watched(username):
 @app.route("/addWatched/<id>", methods = ['GET', 'POST'])
 def addWatched(id):
     if session.get("logged_in"):
-        data = db.execute("SELECT * FROM movies WHERE id = :id", {"id": id}).fetchall()
-        if len(data) <= 0:
+        mdata = db.execute("SELECT * FROM movies WHERE id = :id", {"id": id}).fetchall()
+        sdata = db.execute("SELECT * FROM series WHERE id = :id", {"id": id}).fetchall()
+        if len(mdata) <= 0 & len(sdata) <= 0:
             m = ia.get_movie(id)
             plot = ""
             if 'plot outline' in m.keys():
@@ -148,18 +158,57 @@ def addWatched(id):
                     cast_url += p['full-size headshot'] + ", "
             cast = cast[:-2]
             cast_url = cast_url[:-2]
-            db.execute("INSERT INTO movies (id, kind, title, release_date, rating, cast, cast_url, genres, duration, summary, cover_url) VALUES (:id, :kind, :title, :release_date, :rating, :cast, :cast_url, :genres, :duration, :summary, :cover_url)", {"id": id, "kind": m['kind'], "title": m['title'], "release_date": m['original air date'][:11], "rating": m['rating'], "cast": cast, "cast_url": cast_url, "genres": genres, "duration": m['runtimes'][0], "summary": plot, "cover_url": m['full-size cover url']})
-            db.commit()
-            print(f"{m['title']} inserted")
-        data = db.execute("SELECT * FROM mwatched WHERE wid = :wid", {"wid": id}).fetchall()
-        if len(data) <= 0:
-            db.execute("INSERT INTO mwatched (wid, username) VALUES (:wid, :username)",
-            {"wid": id, "username": session["username"]})
-            db.commit()
-            db.close()
-            return "<script>alert('Added to Watched list'); window.location = 'http://127.0.0.1:5000/';</script>"
+            if 'movie' in m['kind']:
+                db.execute("INSERT INTO movies (id, kind, title, release, rating, cast, cast_url, genres, duration, summary, cover_url) VALUES (:id, :kind, :title, :release, :rating, :cast, :cast_url, :genres, :duration, :summary, :cover_url)", {"id": id, "kind": m['kind'], "title": m['title'], "release": m['original air date'][:11], "rating": m['rating'], "cast": cast, "cast_url": cast_url, "genres": genres, "duration": m['runtimes'][0], "summary": plot, "cover_url": m['full-size cover url']})
+                db.commit()
+                print(f"{m['title']} inserted")
+                data = db.execute("SELECT * FROM mwatched WHERE wid = :wid", {"wid": id}).fetchall()
+                if len(data) <= 0:
+                    db.execute("INSERT INTO mwatched (wid, username) VALUES (:wid, :username)",
+                    {"wid": id, "username": session["username"]})
+                    db.commit()
+                    db.close()
+                    return "<script>alert('Added to Watched list'); window.location = 'http://127.0.0.1:5000/';</script>"
+                else:
+                    db.close()
+                    return "<script>alert('You already watched this'); window.location = 'http://127.0.0.1:5000/'</script>"
+            elif 'series' in m['kind']:
+                ia.update(m, 'episodes')
+                db.execute("INSERT INTO series (id, kind, title, release, rating, cast, cast_url, seasons, episodes, genres, duration, summary, cover_url) VALUES (:id, :kind, :title, :release, :rating, :cast, :cast_url, :seasons, :episodes, :genres, :duration, :summary, :cover_url)", {"id": id, "kind": m['kind'], "title": m['title'], "release": m['series years'], "rating": m['rating'], "cast": cast, "cast_url": cast_url, "seasons": m['number of seasons'], "episodes": m['number of episodes'], "genres": genres, "duration": m['runtimes'][0], "summary": plot, "cover_url": m['full-size cover url']})
+                db.commit()
+                print(f"{m['title']} inserted")
+                data = db.execute("SELECT * FROM swatched WHERE wid = :wid", {"wid": id}).fetchall()
+                if len(data) <= 0:
+                    db.execute("INSERT INTO swatched (wid, username) VALUES (:wid, :username)",
+                    {"wid": id, "username": session["username"]})
+                    db.commit()
+                    db.close()
+                    return "<script>alert('Added to Watched list'); window.location = 'http://127.0.0.1:5000/';</script>"
+                else:
+                    db.close()
+                    return "<script>alert('You already watched this'); window.location = 'http://127.0.0.1:5000/'</script>"
         else:
-            db.close()
-            return "<script>alert('You already watched this'); window.location = 'http://127.0.0.1:5000/'</script>"
+            if len(mdata) > 0:
+                data = db.execute("SELECT * FROM mwatched WHERE wid = :wid", {"wid": id}).fetchall()
+                if len(data) <= 0:
+                    db.execute("INSERT INTO mwatched (wid, username) VALUES (:wid, :username)",
+                    {"wid": id, "username": session["username"]})
+                    db.commit()
+                    db.close()
+                    return "<script>alert('Added to Watched list'); window.location = 'http://127.0.0.1:5000/';</script>"
+                else:
+                    db.close()
+                    return "<script>alert('You already watched this'); window.location = 'http://127.0.0.1:5000/'</script>"
+            if len(sdata) > 0:
+                data = db.execute("SELECT * FROM swatched WHERE wid = :wid", {"wid": id}).fetchall()
+                if len(data) <= 0:
+                    db.execute("INSERT INTO swatched (wid, username) VALUES (:wid, :username)",
+                    {"wid": id, "username": session["username"]})
+                    db.commit()
+                    db.close()
+                    return "<script>alert('Added to Watched list'); window.location = 'http://127.0.0.1:5000/';</script>"
+                else:
+                    db.close()
+                    return "<script>alert('You already watched this'); window.location = 'http://127.0.0.1:5000/'</script>"
     else:
         return "<script>alert('Please Login first'); window.location = 'http://127.0.0.1:5000/login';</script>"
