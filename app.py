@@ -1,12 +1,12 @@
-import time
-import os, datetime
 import imdb
+import os, datetime
 
 from flask import Flask, session, request, render_template, redirect
 from flask_session import Session
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 
+# imdb access
 ia = imdb.IMDb()
 
 app = Flask(__name__)
@@ -45,6 +45,7 @@ def register():
             db.commit()
             session["logged_in"] = True
             session["username"] = username
+            db.close()
             return "<script>alert('Registered Successfully');window.location = 'http://127.0.0.1:5000/';</script>"
         else:
             return render_template("register.html")
@@ -62,10 +63,13 @@ def login():
                 if data[0].password == password:
                     session["logged_in"] = True
                     session["username"] = username
+                    db.close()
                     return "<script>alert('Login Successful');window.location = 'http://127.0.0.1:5000/';</script>"
                 else:
+                    db.close()
                     return "<script>alert('Invalid password');window.location = 'http://127.0.0.1:5000/login';</script>"
             else:
+                db.close()
                 return "<script>alert('Please register first');window.location = 'http://127.0.0.1:5000/register';</script>"
         else:
             return render_template("login.html")
@@ -81,19 +85,24 @@ def logout():
 def search():
     if request.method == 'POST':
         title = request.form.get("search")
+        search = f"%{title}%"
         movies = []
-        query = 'SELECT * FROM movies WHERE ' + 'title LIKE \'%'+title+'%\''
-        data = db.execute(query).fetchall()
+        data = db.execute("SELECT * FROM movies WHERE title LIKE :title", {"title": search}).fetchall()
         if len(data) <= 0:
             access = 'imdb'
             res = ia.search_movie(title)
-            print(len(res))
+            print(len(res), res[0]['kind'])
             movie = ia.get_movie(res[0].movieID)
-            movies.append(movie)
+            if 'movie' in movie['kind']:
+                movies.append(movie)
+            elif 'series' in movie['kind']:
+                ia.update(movie, 'episodes')
+                movies.append(movie)
         else:
             access = 'local'
             for d in data:
                 movies.append(d)
+        db.close()
         if session.get("logged_in"):
             return render_template("search.html", movies = movies, loginstatus = 'True', curruser = session["username"],
                                     access = access)
@@ -112,6 +121,7 @@ def watched(username):
             id = m.wid
             data = db.execute("SELECT * FROM movies WHERE id = :id", {"id": id}).fetchall()[0]
             movies.append(data)
+        db.close()
         return render_template("watched.html", curruser = username, movies = movies)
     else:
         return "<script>alert('Please Login first'); window.location = 'http://127.0.0.1:5000/login';</script>"
@@ -122,19 +132,34 @@ def addWatched(id):
         data = db.execute("SELECT * FROM movies WHERE id = :id", {"id": id}).fetchall()
         if len(data) <= 0:
             m = ia.get_movie(id)
+            plot = ""
+            if 'plot outline' in m.keys():
+                plot = m['plot outline']
             genres = ""
             for g in m['genres']:
                 genres += g + ", "
             genres = genres[:-2]
             cast = ""
+            cast_url = ""
             for c in m['cast'][:5]:
                 cast += c['name'] + f"({c.currentRole}), "
+                p = ia.get_person(c.personID)
+                if 'full-size headshot' in p.keys():
+                    cast_url += p['full-size headshot'] + ", "
             cast = cast[:-2]
-            db.execute("INSERT INTO movies (id, title, release_date, rating, cast, genres, duration, summary, cover_url) VALUES (:id, :title, :release_date, :rating, :cast, :genres, :duration, :summary, :cover_url)", {"id": id, "title": m['title'], "release_date": m['original air date'][:11], "rating": m['rating'], "cast": cast, "genres": genres, "duration": m['runtimes'][0], "summary": m['plot outline'], "cover_url": m['full-size cover url']})
+            cast_url = cast_url[:-2]
+            db.execute("INSERT INTO movies (id, kind, title, release_date, rating, cast, cast_url, genres, duration, summary, cover_url) VALUES (:id, :kind, :title, :release_date, :rating, :cast, :cast_url, :genres, :duration, :summary, :cover_url)", {"id": id, "kind": m['kind'], "title": m['title'], "release_date": m['original air date'][:11], "rating": m['rating'], "cast": cast, "cast_url": cast_url, "genres": genres, "duration": m['runtimes'][0], "summary": plot, "cover_url": m['full-size cover url']})
             db.commit()
             print(f"{m['title']} inserted")
-        db.execute("INSERT INTO mwatched (wid, username) VALUES (:wid, :username)", {"wid": id, "username": session["username"]})
-        db.commit()
-        return "<script>alert('Added to Watched list'); window.location = 'http://127.0.0.1:5000/';</script>"
+        data = db.execute("SELECT * FROM mwatched WHERE wid = :wid", {"wid": id}).fetchall()
+        if len(data) <= 0:
+            db.execute("INSERT INTO mwatched (wid, username) VALUES (:wid, :username)",
+            {"wid": id, "username": session["username"]})
+            db.commit()
+            db.close()
+            return "<script>alert('Added to Watched list'); window.location = 'http://127.0.0.1:5000/';</script>"
+        else:
+            db.close()
+            return "<script>alert('You already watched this'); window.location = 'http://127.0.0.1:5000/'</script>"
     else:
         return "<script>alert('Please Login first'); window.location = 'http://127.0.0.1:5000/login';</script>"
