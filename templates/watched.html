@@ -13,8 +13,16 @@
     <img src="{{m['cover_url']}}" style="width:100px;height:150px;margin-left:5px;margin-right:15px;float:left;" alt="cover photo">
       <br>
       <div>{{loop.index}}. {{m.title}}</div>
-      <div>Release Date: {{m.release_date}}</div>
-      <div>Duration: {{m.duration}} minutes</div>
+      {% if 'movie' in m['kind'] %}
+        <div>Release Date: {{m.release}}</div>
+      {% else %}
+        <div>Years: {{m.release}}</div>
+      {% endif %}
+      {% if 'movie' in m['kind'] %}
+        <div>Duration: {{m.duration}} minutes</div>
+      {% else %}
+        <div>Avg. Duration: {{m.duration}} minutes</div>
+      {% endif %}
       <div>Rating: {{m.rating}}</div>
       <div>Genres: {{m.genres}}</div>
       {% set urls = m.cast_url.split(', ') %}
