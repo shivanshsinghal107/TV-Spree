@@ -23,11 +23,11 @@ db.execute('''CREATE TABLE IF NOT EXISTS email (mail VARCHAR(64) NOT NULL, usern
             FOREIGN KEY(username) REFERENCES users(username) ON DELETE CASCADE ON UPDATE CASCADE,
             PRIMARY KEY(mail, username))''')
 # origin, status, box office
-db.execute('''CREATE TABLE IF NOT EXISTS movies (id INTEGER NOT NULL, kind VARCHAR(20), title VARCHAR(64), release_date text,
+db.execute('''CREATE TABLE IF NOT EXISTS movies (id INTEGER NOT NULL, kind VARCHAR(20), title VARCHAR(64), release text,
             rating FLOAT, cast text, cast_url text, genres VARCHAR(100), duration INTEGER, summary text, cover_url text, PRIMARY KEY(id))''')
-# origin, status, box office, next_episode, summary
-db.execute('''CREATE TABLE IF NOT EXISTS series (id INTEGER NOT NULL, kind VARCHAR(20), title VARCHAR(64), release_year text,
-            rating FLOAT, cast text, cast_url text, season INTEGER, episodes INTEGER, duration INTEGER, genres VARCHAR(100), cover_url text, PRIMARY KEY(id))''')
+# origin, status, box office, next_episode
+db.execute('''CREATE TABLE IF NOT EXISTS series (id INTEGER NOT NULL, kind VARCHAR(20), title VARCHAR(64), release text,
+            rating FLOAT, cast text, cast_url text, seasons INTEGER, episodes INTEGER, genres VARCHAR(100), duration INTEGER, summary text, cover_url text, PRIMARY KEY(id))''')
 db.execute('''CREATE TABLE IF NOT EXISTS mwatched (id INTEGER PRIMARY KEY AUTOINCREMENT, wid INTEGER NOT NULL,
             username VARCHAR(16) NOT NULL, FOREIGN KEY(username) REFERENCES users(username) ON DELETE CASCADE ON UPDATE CASCADE,
             FOREIGN KEY(wid) REFERENCES movies(id) ON DELETE CASCADE ON UPDATE CASCADE)''')
@@ -60,7 +60,7 @@ def main():
                 cast_url += p['full-size headshot'] + ", "
         cast = cast[:-2]
         cast_url = cast_url[:-2]
-        db.execute("INSERT INTO movies (id, kind, title, release_date, rating, cast, cast_url, genres, duration, summary, cover_url) VALUES (:id, :kind, :title, :release_date, :rating, :cast, :cast_url, :genres, :duration, :summary, :cover_url)", {"id": id, "kind": m['kind'], "title": m['title'], "release_date": m['original air date'][:11], "rating": m['rating'], "cast": cast, "cast_url": cast_url, "genres": genres, "duration": m['runtimes'][0], "summary": plot, "cover_url": m['full-size cover url']})
+        db.execute("INSERT INTO movies (id, kind, title, release, rating, cast, cast_url, genres, duration, summary, cover_url) VALUES (:id, :kind, :title, :release, :rating, :cast, :cast_url, :genres, :duration, :summary, :cover_url)", {"id": id, "kind": m['kind'], "title": m['title'], "release": m['original air date'][:11], "rating": m['rating'], "cast": cast, "cast_url": cast_url, "genres": genres, "duration": m['runtimes'][0], "summary": plot, "cover_url": m['full-size cover url']})
         db.commit()
         print(f"{count}. {m['title']} inserted")
         count += 1
