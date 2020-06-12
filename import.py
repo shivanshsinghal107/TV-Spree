@@ -22,12 +22,12 @@ db.execute('''CREATE TABLE IF NOT EXISTS users (username VARCHAR(16) NOT NULL, p
 db.execute('''CREATE TABLE IF NOT EXISTS email (mail VARCHAR(64) NOT NULL, username VARCHAR(16) NOT NULL,
             FOREIGN KEY(username) REFERENCES users(username) ON DELETE CASCADE ON UPDATE CASCADE,
             PRIMARY KEY(mail, username))''')
-#origin, status, person['full-size headshot']
-db.execute('''CREATE TABLE IF NOT EXISTS movies (id INTEGER NOT NULL, title VARCHAR(64), release_date text, rating FLOAT,
-            cast text, genres VARCHAR(100), duration INTEGER, summary text, cover_url text, PRIMARY KEY(id))''')
-#origin, status, person['full-size headshot']
-db.execute('''CREATE TABLE IF NOT EXISTS series (id INTEGER NOT NULL, title VARCHAR(64), release_date text, rating FLOAT,
-            cast text, season INTEGER, episodes INTEGER, duration INTEGER, genres VARCHAR(100), summary text, next_episode text, cover_url text, PRIMARY KEY(id))''')
+# origin, status, box office
+db.execute('''CREATE TABLE IF NOT EXISTS movies (id INTEGER NOT NULL, kind VARCHAR(20), title VARCHAR(64), release_date text,
+            rating FLOAT, cast text, cast_url text, genres VARCHAR(100), duration INTEGER, summary text, cover_url text, PRIMARY KEY(id))''')
+# origin, status, box office, next_episode, summary
+db.execute('''CREATE TABLE IF NOT EXISTS series (id INTEGER NOT NULL, kind VARCHAR(20), title VARCHAR(64), release_year text,
+            rating FLOAT, cast text, cast_url text, season INTEGER, episodes INTEGER, duration INTEGER, genres VARCHAR(100), cover_url text, PRIMARY KEY(id))''')
 db.execute('''CREATE TABLE IF NOT EXISTS mwatched (id INTEGER PRIMARY KEY AUTOINCREMENT, wid INTEGER NOT NULL,
             username VARCHAR(16) NOT NULL, FOREIGN KEY(username) REFERENCES users(username) ON DELETE CASCADE ON UPDATE CASCADE,
             FOREIGN KEY(wid) REFERENCES movies(id) ON DELETE CASCADE ON UPDATE CASCADE)''')
@@ -41,20 +41,28 @@ def main():
     ia = imdb.IMDb()
     top250 = ia.get_top250_movies()
     count = 1
-    for t in top250[:50]:
+    for t in top250[:10]:
         id = t.movieID
         m = ia.get_movie(id)
+        plot = ""
+        if 'plot outline' in m.keys():
+            plot = m['plot outline']
         genres = ""
         for g in m['genres']:
             genres += g + ", "
         genres = genres[:-2]
         cast = ""
+        cast_url = ""
         for c in m['cast'][:5]:
             cast += c['name'] + f"({c.currentRole}), "
+            p = ia.get_person(c.personID)
+            if 'full-size headshot' in p.keys():
+                cast_url += p['full-size headshot'] + ", "
         cast = cast[:-2]
-        db.execute("INSERT INTO movies (id, title, release_date, rating, cast, genres, duration, summary, cover_url) VALUES (:id, :title, :release_date, :rating, :cast, :genres, :duration, :summary, :cover_url)", {"id": id, "title": m['title'], "release_date": m['original air date'][:11], "rating": m['rating'], "cast": cast, "genres": genres, "duration": m['runtimes'][0], "summary": m['plot outline'], "cover_url": m['full-size cover url']})
+        cast_url = cast_url[:-2]
+        db.execute("INSERT INTO movies (id, kind, title, release_date, rating, cast, cast_url, genres, duration, summary, cover_url) VALUES (:id, :kind, :title, :release_date, :rating, :cast, :cast_url, :genres, :duration, :summary, :cover_url)", {"id": id, "kind": m['kind'], "title": m['title'], "release_date": m['original air date'][:11], "rating": m['rating'], "cast": cast, "cast_url": cast_url, "genres": genres, "duration": m['runtimes'][0], "summary": plot, "cover_url": m['full-size cover url']})
         db.commit()
-        print(f"{count}.{m['title']} inserted")
+        print(f"{count}. {m['title']} inserted")
         count += 1
     movies = db.execute("SELECT * FROM movies").fetchall()
     series = db.execute("SELECT * FROM series").fetchall()
