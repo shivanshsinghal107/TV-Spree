@@ -3,10 +3,25 @@
 <head>
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
   <title>TV Spree</title>
+  <style>
+      /* Three image containers (use 25% for four, and 50% for two, etc) */
+    .column {
+    float: left;
+    width: 20%;
+    padding: 5px;
+    }
+
+    /* Clear floats after image containers */
+    .row::after {
+    content: "";
+    clear: both;
+    display: table;
+    }
+  </style>
 </head>
 <body>
   <h1 align="center">Welcome to TV Spree!</h1>
-  <h1 align="center">WATCH . TRACK . WATCH</h1>
+  <h1 align="center">WATCH . TRACK . REPEAT</h1>
   <h2>{% block heading %}{% endblock %}</h2>
 
   {%block body %}
