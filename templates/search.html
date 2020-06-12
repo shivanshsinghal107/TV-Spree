@@ -16,28 +16,67 @@
   <br><br>
   <div>
   {% for movie in movies %}
-    {% if access == 'imdb' %}
-      <img src="{{movie['full-size cover url']}}" style="width:200px;height:300px;margin-left:5px;margin-right:15px;float:left;" alt="cover photo">
-      <div>Title: {{movie['title']}}</div>
-      <div>Release Date: {{movie['original air date']}}</div>
-      <div>Rating: {{movie['rating']}}</div>
-      <div>Duration: {{movie['runtimes'][0]}} minutes</div>
-      <div>Genres: {{movie['genres']}}</div>
-      <br>
-      <div>Movie Plot:<br>{{movie['plot outline']}}</div><br>
+    {% if 'movie' in movie['kind'] %}
+      {% if access == 'imdb' %}
+        <img src="{{movie['full-size cover url']}}" style="width:150px;height:225px;margin-left:5px;margin-right:15px;float:left;" alt="cover photo"><br>
+        <div>{{movie['title']}}</div>
+        <div>Release Date: {{movie['original air date']}}</div>
+        <div>Rating: {{movie['rating']}}</div>
+        <div>Duration: {{movie['runtimes'][0]}} minutes</div>
+        <div>Genres: {{movie['genres']}}</div>
+        <br>
+        <form action="{{url_for('addWatched', id = movie.movieID)}}">
+            <button type="submit" class="btn btn-primary">Watched</button>
+        </form>
+        <br>
+      {% else %}
+        <img src="{{movie['cover_url']}}" style="width:150px;height:225px;margin-left:5px;margin-right:15px;float:left;" alt="cover photo"><br>
+        <div>{{movie['title']}}</div>
+        <div>Release Date: {{movie['release_date']}}</div>
+        <div>Rating: {{movie['rating']}}</div>
+        <div>Duration: {{movie['duration']}} minutes</div>
+        <div>Genres: {{movie['genres']}}</div>
+        <br>
+        <form action="{{url_for('addWatched', id = movie['id'])}}">
+            <button type="submit" class="btn btn-primary">Watched</button>
+        </form>
+        <br>
+      {% endif %}
     {% else %}
-      <img src="{{movie['cover_url']}}" style="width:200px;height:300px;margin-left:5px;margin-right:15px;float:left;" alt="cover photo">
-      <div>Title: {{movie['title']}}</div>
-      <div>Release Date: {{movie['release_date']}}</div>
-      <div>Rating: {{movie['rating']}}</div>
-      <div>Duration: {{movie['duration']}} minutes</div>
-      <div>Genres: {{movie['genres']}}</div>
-      <br>
-      <div>Movie Plot:<br>{{movie['summary']}}</div><br>
+      {% if access == 'imdb' %}
+        {% for i in movie['episodes'].keys() %}
+          <img src="{{movie['full-size cover url']}}" style="width:150px;height:225px;margin-left:5px;margin-right:15px;float:left;" alt="cover photo"><br>
+          <div>{{movie['title']}}</div>
+          <div>Season: {{i}}</div>
+          {% set e = movie['episodes'][i]|length %}
+          <div>Episodes: {{e}}</div>
+          <div>Year: {{movie['episodes'][i][1]['year']}}</div>
+          <div>Duration: {{movie['runtimes'][0]}} minutes</div>
+          <div>Genres: {{movie['genres']}}</div>
+          <br>
+          <form action="{{url_for('addWatched', id = movie.movieID)}}">
+              <button type="submit" class="btn btn-primary">Watched</button>
+          </form>
+          <br>
+        {% endfor %}
+      {% else %}
+        <img src="{{movie['cover_url']}}" style="width:150px;height:225px;margin-left:5px;margin-right:15px;float:left;" alt="cover photo"><br>
+        <div>{{movie['title']}}</div>
+        <div>Season: {{movie['season']}}</div>
+        <div>Episodes: {{movie['episodes']}}</div>
+        <div>Year: {{movie['release_year']}}</div>
+        <div>Rating: {{movie['rating']}}</div>
+        <div>Duration: {{movie['duration']}} minutes</div>
+        <div>Genres: {{movie['genres']}}</div>
+        <br>
+        <div>Movie Plot:<br>{{movie['summary']}}</div><br>
+        <form action="{{url_for('addWatched', id = movie['id'])}}">
+            <button type="submit" class="btn btn-primary">Watched</button>
+        </form>
+        <br>
+      {% endif %}
     {% endif %}
     </div>
-    <form action="{{url_for('addWatched', id = movie.movieID)}}">
-        <button type="submit" class="btn btn-primary">Watched</button>
-    </form>
+    <br>
   {% endfor %}
 {% endblock %}
