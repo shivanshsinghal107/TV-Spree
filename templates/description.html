@@ -1,0 +1,34 @@
+{% extends "layout.html" %}
+
+{% block heading %}
+  {{movie['title']}}
+{% endblock %}
+
+{% block body %}
+  <a href="/">Home</a>
+  <img src="{{movie['cover_url']}}" style="width:350px;height:525px;margin-left:5px;margin-right:15px;float:left;" alt="cover photo">
+  <div>Genres: {{movie['genres']}}</div>
+  <div>Rating: {{movie['rating']}}</div>
+  {% if 'movie' in movie['kind'] %}
+    <div>Duration: {{movie['duration']}} minutes</div>
+    <div>Release Date: {{movie['release']}}</div>
+  {% else %}
+    <div>Seasons: {{movie['seasons']}}</div>
+    <div>Years: {{movie['release']}}</div>
+    <div>Episodes: {{movie['episodes']}}</div>
+    <div>Avg. Duration: {{movie['duration']}} minutes</div>
+  {% endif %}
+  <br>
+  <div>Plot: {{movie['summary']}}</div>
+  <br><br>
+  {% set urls = movie['cast_url'].split(', ') %}
+  {% set names = movie['cast'].split(', ') %}
+  <div class="row">
+    {% for url in urls %}
+      <div class="column">
+        <img src="{{url}}" style="width:100px;height:150px;margin-left:5px;margin-right:10px;float:left;" alt="cover photo">
+        <figcaption>{{names[loop.index-1]}}</figcaption>
+      </div>
+    {% endfor %}
+  </div>
+{% endblock %}
