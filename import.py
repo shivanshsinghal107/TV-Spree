@@ -28,10 +28,10 @@ db.execute('''CREATE TABLE IF NOT EXISTS movies (id INTEGER NOT NULL, kind VARCH
 # origin, status, box office, next_episode
 db.execute('''CREATE TABLE IF NOT EXISTS series (id INTEGER NOT NULL, kind VARCHAR(20), title VARCHAR(64), release text,
             rating FLOAT, cast text, cast_url text, seasons INTEGER, episodes INTEGER, genres VARCHAR(100), duration INTEGER, summary text, cover_url text, PRIMARY KEY(id))''')
-db.execute('''CREATE TABLE IF NOT EXISTS mwatched (id INTEGER PRIMARY KEY AUTOINCREMENT, wid INTEGER NOT NULL,
+db.execute('''CREATE TABLE IF NOT EXISTS mwatched (id INTEGER PRIMARY KEY AUTOINCREMENT, wid INTEGER NOT NULL, user_rating INTEGER,
             username VARCHAR(16) NOT NULL, FOREIGN KEY(username) REFERENCES users(username) ON DELETE CASCADE ON UPDATE CASCADE,
             FOREIGN KEY(wid) REFERENCES movies(id) ON DELETE CASCADE ON UPDATE CASCADE)''')
-db.execute('''CREATE TABLE IF NOT EXISTS swatched (id INTEGER PRIMARY KEY AUTOINCREMENT, wid INTEGER NOT NULL,
+db.execute('''CREATE TABLE IF NOT EXISTS swatched (id INTEGER PRIMARY KEY AUTOINCREMENT, wid INTEGER NOT NULL, user_rating INTEGER,
             username VARCHAR(16) NOT NULL, FOREIGN KEY(username) REFERENCES users(username) ON DELETE CASCADE ON UPDATE CASCADE,
             FOREIGN KEY(wid) REFERENCES series(id) ON DELETE CASCADE ON UPDATE CASCADE)''')
 db.commit()
@@ -66,6 +66,7 @@ def main():
         count += 1
     movies = db.execute("SELECT * FROM movies").fetchall()
     series = db.execute("SELECT * FROM series").fetchall()
+    db.close()
     if len(movies) > 0:
         for movie in movies:
             print(f'Title: {movie.title}\tDuration: {movie.duration} minutes\tRating: {movie.rating}')
@@ -74,7 +75,7 @@ def main():
 
     if len(series) > 0:
         for s in series:
-            print(f'{s.title}\tSeason {s.season}\tRating {s.rating}')
+            print(f'{s.title}\tSeasons {s.seasons}\tRating {s.rating}')
     else:
         print("\nNo series in database till now")
 
