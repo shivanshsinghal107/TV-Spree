@@ -18,24 +18,61 @@
   {% for movie in movies %}
     {% if 'movie' in movie['kind'] %}
       {% if access == 'imdb' %}
-        <img src="{{movie['full-size cover url']}}" style="width:150px;height:225px;margin-left:5px;margin-right:15px;float:left;" alt="cover photo"><br>
+        {% set cast = movie['cast'][:5] %}
+        <a href="{{url_for('description', id = movie.movieID, movie_object = {'title': movie['title'], 'release': movie['original air date'], 'rating': movie['rating'], 'duration': movie['runtimes'][0], 'genres': movie['genres'], 'cast': [cast[0].personID, cast[1].personID, cast[2].personID, cast[3].personID, cast[4].personID], 'roles': [cast[0].currentRole['name'], cast[1].currentRole['name'], cast[2].currentRole['name'], cast[3].currentRole['name'], cast[4].currentRole['name']], 'summary': movie['plot outline'], 'cover_url': movie['full-size cover url']}, access = access)}}">
+          <img src="{{movie['full-size cover url']}}" style="width:150px;height:225px;margin-left:5px;margin-right:15px;float:left;" alt="cover photo">
+        </a>
         <div>{{movie['title']}}</div>
         <div>Release Date: {{movie['original air date']}}</div>
         <div>Rating: {{movie['rating']}}</div>
         <div>Duration: {{movie['runtimes'][0]}} minutes</div>
         <div>Genres: {{movie['genres']}}</div>
+        <form method="post">
+          Rate:
+          <select name="user_rating">
+            <option value="0" selected>0</option>
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+            <option value="7">7</option>
+            <option value="8">8</option>
+            <option value="9">9</option>
+            <option value="10">10</option>
+          </select>
+        </form>
         <br>
         <form action="{{url_for('addWatched', id = movie.movieID)}}">
             <button type="submit" class="btn btn-primary">Watched</button>
         </form>
         <br>
       {% else %}
-        <img src="{{movie['cover_url']}}" style="width:150px;height:225px;margin-left:5px;margin-right:15px;float:left;" alt="cover photo"><br>
+        <a href="{{url_for('description', id = movie['id'], movie_object = dict(movie), access = access)}}">
+          <img src="{{movie['cover_url']}}" style="width:150px;height:225px;margin-left:5px;margin-right:15px;float:left;" alt="cover photo">
+        </a>
         <div>{{movie['title']}}</div>
         <div>Release Date: {{movie['release_date']}}</div>
         <div>Rating: {{movie['rating']}}</div>
         <div>Duration: {{movie['duration']}} minutes</div>
         <div>Genres: {{movie['genres']}}</div>
+        <form>
+          Rate:
+          <select name="user_rating">
+            <option value="0" selected>0</option>
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+            <option value="7">7</option>
+            <option value="8">8</option>
+            <option value="9">9</option>
+            <option value="10">10</option>
+          </select>
+        </form>
         <br>
         <form action="{{url_for('addWatched', id = movie['id'])}}">
             <button type="submit" class="btn btn-primary">Watched</button>
@@ -44,26 +81,63 @@
       {% endif %}
     {% else %}
       {% if access == 'imdb' %}
-        <img src="{{movie['full-size cover url']}}" style="width:150px;height:225px;margin-left:5px;margin-right:15px;float:left;" alt="cover photo"><br>
+        {% set cast = movie['cast'][:5] %}
+        <a href="{{url_for('description', id = movie.movieID, movie_object = {'title': movie['title'], 'release': movie['series years'], 'rating': movie['rating'], 'duration': movie['runtimes'][0], 'genres': movie['genres'], 'seasons': movie['number of seasons'], 'episodes': movie['number of episodes'], 'cast': [cast[0].personID, cast[1].personID, cast[2].personID, cast[3].personID, cast[4].personID], 'roles': [cast[0].currentRole['name'], cast[1].currentRole['name'], cast[2].currentRole['name'], cast[3].currentRole['name'], cast[4].currentRole['name']], 'summary': movie['plot outline'], 'cover_url': movie['full-size cover url']}, access = access)}}">
+          <img src="{{movie['full-size cover url']}}" style="width:150px;height:225px;margin-left:5px;margin-right:15px;float:left;" alt="cover photo">
+        </a>
         <div>{{movie['title']}}</div>
         <div>Seasons: {{movie['number of seasons']}}</div>
         <div>Year: {{movie['series years']}}</div>
         <div>Rating: {{movie['rating']}}</div>
         <div>Avg. Duration: {{movie['runtimes'][0]}} minutes</div>
         <div>Genres: {{movie['genres']}}</div>
+        <form>
+          Rate:
+          <select name="user_rating">
+            <option value="0" selected>0</option>
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+            <option value="7">7</option>
+            <option value="8">8</option>
+            <option value="9">9</option>
+            <option value="10">10</option>
+          </select>
+        </form>
         <br>
         <form action="{{url_for('addWatched', id = movie.movieID)}}">
             <button type="submit" class="btn btn-primary">Watched</button>
         </form>
         <br>
       {% else %}
-        <img src="{{movie['cover_url']}}" style="width:150px;height:225px;margin-left:5px;margin-right:15px;float:left;" alt="cover photo"><br>
+        <a href="{{url_for('description', id = movie['id'], movie_object = dict(movie), access = access)}}">
+          <img src="{{movie['cover_url']}}" style="width:150px;height:225px;margin-left:5px;margin-right:15px;float:left;" alt="cover photo">
+        </a>
         <div>{{movie['title']}}</div>
         <div>Season: {{movie['seasons']}}</div>
         <div>Year: {{movie['release']}}</div>
         <div>Rating: {{movie['rating']}}</div>
         <div>Avg. Duration: {{movie['duration']}} minutes</div>
         <div>Genres: {{movie['genres']}}</div>
+        <form method="post">
+          Rate:
+          <select name="user_rating">
+            <option value="0" selected>0</option>
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+            <option value="7">7</option>
+            <option value="8">8</option>
+            <option value="9">9</option>
+            <option value="10">10</option>
+          </select>
+        </form>
         <br>
         <form action="{{url_for('addWatched', id = movie['id'])}}">
             <button type="submit" class="btn btn-primary">Watched</button>
