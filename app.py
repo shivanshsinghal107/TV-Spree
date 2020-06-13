@@ -85,27 +85,32 @@ def logout():
 def search():
     if request.method == 'POST':
         title = request.form.get("search")
-        search = f"%{title}%"
-        movies = []
-        data = db.execute("SELECT * FROM movies WHERE title LIKE :title", {"title": search}).fetchall()
-        if len(data) <= 0:
-            access = 'imdb'
-            res = ia.search_movie(title)
-            print(len(res), res[0]['kind'])
-            movie = ia.get_movie(res[0].movieID)
-            if 'series' in movie['kind']:
-                ia.update(movie, 'episodes')
-            movies.append(movie)
+        if title:
+            search = f"%{title}%"
+            movies = []
+            data = db.execute("SELECT * FROM movies WHERE title LIKE :title", {"title": search}).fetchall()
+            if len(data) <= 0:
+                access = 'imdb'
+                res = ia.search_movie(title)
+                #for r in res:
+                #    if r['title'].startswith(title.title()):
+                movie = ia.get_movie(res[0].movieID)
+                if 'series' in movie['kind']:
+                    ia.update(movie, 'episodes')
+                    movies.append(movie)
+                print(len(res), res[0]['kind'])
+            else:
+                access = 'local'
+                for d in data:
+                    movies.append(d)
+            db.close()
+            if session.get("logged_in"):
+                return render_template("search.html", movies = movies, loginstatus = 'True', curruser = session["username"],
+                                        access = access)
+            else:
+                return render_template("search.html", movies = movies, loginstatus = 'False', access = access)
         else:
-            access = 'local'
-            for d in data:
-                movies.append(d)
-        db.close()
-        if session.get("logged_in"):
-            return render_template("search.html", movies = movies, loginstatus = 'True', curruser = session["username"],
-                                    access = access)
-        else:
-            return render_template("search.html", movies = movies, loginstatus = 'False', access = access)
+            return "<script>alert('Please enter the query in the search box');window.location = 'http://127.0.0.1:5000/';</script>"
     else:
         return "<script>alert('Please enter the search query');window.location = 'http://127.0.0.1:5000/';</script>"
 
@@ -116,11 +121,13 @@ def watched(username):
         watchedMovies = db.execute("SELECT * FROM mwatched WHERE username = :username", {"username": username}).fetchall()
         watchedSeries = db.execute("SELECT * FROM swatched WHERE username = :username", {"username": username}).fetchall()
         movies = []
+        ratings = []
         for m in watchedMovies:
             id = m.wid
             data = db.execute("SELECT * FROM movies WHERE id = :id", {"id": id}).fetchall()
             if len(data) > 0:
                 movies.append(data[0])
+                ratings.append(m.user_rating)
             else:
                 break
         for s in watchedSeries:
@@ -128,16 +135,18 @@ def watched(username):
             data = db.execute("SELECT * FROM series WHERE id = :id", {"id": id}).fetchall()
             if len(data) > 0:
                 movies.append(data[0])
+                ratings.append(m.user_rating)
             else:
                 break
         db.close()
-        return render_template("watched.html", curruser = username, movies = movies)
+        return render_template("watched.html", curruser = username, movies = movies, ratings = ratings)
     else:
         return "<script>alert('Please Login first'); window.location = 'http://127.0.0.1:5000/login';</script>"
 
 @app.route("/addWatched/<id>", methods = ['GET', 'POST'])
 def addWatched(id):
     if session.get("logged_in"):
+        user_rating = request.form.get("user_rating")
         mdata = db.execute("SELECT * FROM movies WHERE id = :id", {"id": id}).fetchall()
         sdata = db.execute("SELECT * FROM series WHERE id = :id", {"id": id}).fetchall()
         if len(mdata) <= 0 & len(sdata) <= 0:
@@ -164,8 +173,8 @@ def addWatched(id):
                 print(f"{m['title']} inserted")
                 data = db.execute("SELECT * FROM mwatched WHERE wid = :wid", {"wid": id}).fetchall()
                 if len(data) <= 0:
-                    db.execute("INSERT INTO mwatched (wid, username) VALUES (:wid, :username)",
-                    {"wid": id, "username": session["username"]})
+                    db.execute("INSERT INTO mwatched (wid, user_rating, username) VALUES (:wid, :user_rating, :username)",
+                    {"wid": id, "user_rating": user_rating, "username": session["username"]})
                     db.commit()
                     db.close()
                     return "<script>alert('Added to Watched list'); window.location = 'http://127.0.0.1:5000/';</script>"
@@ -179,8 +188,8 @@ def addWatched(id):
                 print(f"{m['title']} inserted")
                 data = db.execute("SELECT * FROM swatched WHERE wid = :wid", {"wid": id}).fetchall()
                 if len(data) <= 0:
-                    db.execute("INSERT INTO swatched (wid, username) VALUES (:wid, :username)",
-                    {"wid": id, "username": session["username"]})
+                    db.execute("INSERT INTO swatched (wid, user_rating, username) VALUES (:wid, :user_rating, :username)",
+                    {"wid": id, "user_rating": user_rating, "username": session["username"]})
                     db.commit()
                     db.close()
                     return "<script>alert('Added to Watched list'); window.location = 'http://127.0.0.1:5000/';</script>"
@@ -191,8 +200,8 @@ def addWatched(id):
             if len(mdata) > 0:
                 data = db.execute("SELECT * FROM mwatched WHERE wid = :wid", {"wid": id}).fetchall()
                 if len(data) <= 0:
-                    db.execute("INSERT INTO mwatched (wid, username) VALUES (:wid, :username)",
-                    {"wid": id, "username": session["username"]})
+                    db.execute("INSERT INTO mwatched (wid, user_rating, username) VALUES (:wid, :user_rating, :username)",
+                    {"wid": id, "user_rating": user_rating, "username": session["username"]})
                     db.commit()
                     db.close()
                     return "<script>alert('Added to Watched list'); window.location = 'http://127.0.0.1:5000/';</script>"
@@ -202,8 +211,8 @@ def addWatched(id):
             if len(sdata) > 0:
                 data = db.execute("SELECT * FROM swatched WHERE wid = :wid", {"wid": id}).fetchall()
                 if len(data) <= 0:
-                    db.execute("INSERT INTO swatched (wid, username) VALUES (:wid, :username)",
-                    {"wid": id, "username": session["username"]})
+                    db.execute("INSERT INTO swatched (wid, user_rating, username) VALUES (:wid, :user_rating, :username)",
+                    {"wid": id, "user_rating": user_rating, "username": session["username"]})
                     db.commit()
                     db.close()
                     return "<script>alert('Added to Watched list'); window.location = 'http://127.0.0.1:5000/';</script>"
@@ -212,3 +221,43 @@ def addWatched(id):
                     return "<script>alert('You already watched this'); window.location = 'http://127.0.0.1:5000/'</script>"
     else:
         return "<script>alert('Please Login first'); window.location = 'http://127.0.0.1:5000/login';</script>"
+
+@app.route("/removeWatched/<id>", methods = ['GET', 'POST'])
+def removeWatched(id):
+    if session.get("logged_in"):
+        if len(db.execute("SELECT * FROM mwatched WHERE wid = :wid", {"wid": id}).fetchall()) > 0:
+            db.execute("DELETE FROM mwatched WHERE wid = :wid", {"wid": id})
+            db.commit()
+        else:
+            db.execute("DELETE FROM swatched WHERE wid = :wid", {"wid": id})
+            db.commit()
+        db.close()
+        print("deleted")
+        username = session["username"]
+        return redirect(f"http://127.0.0.1:5000/watched/{username}")
+    else:
+        return "<script>alert('Please Login first'); window.location = 'http://127.0.0.1:5000/login';</script>"
+
+@app.route("/<id>/description", methods = ['GET', 'POST'])
+def description(id):
+    access = request.args.get("access")
+    movie_object = request.args.get("movie_object")
+    movie = eval(movie_object)
+    if access == 'imdb':
+        plot = ""
+        if 'plot outline' in movie.keys():
+            plot = movie['plot outline']
+        genres = ""
+        for g in movie['genres']:
+            genres += g + ", "
+        genres = genres[:-2]
+        cast = ""
+        cast_url = ""
+        for i in range(0, len(movie['cast'])):
+            p = ia.get_person(movie['cast'][i])
+            cast += p['name'] + f"({movie['roles'][i]}), "
+            if 'full-size headshot' in p.keys():
+                cast_url += p['full-size headshot'] + ", "
+        movie['cast'] = cast[:-2]
+        movie['cast_url'] = cast_url[:-2]
+    return render_template("description.html", movie = movie, access = access)
