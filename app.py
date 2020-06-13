@@ -97,7 +97,7 @@ def search():
                 movie = ia.get_movie(res[0].movieID)
                 if 'series' in movie['kind']:
                     ia.update(movie, 'episodes')
-                    movies.append(movie)
+                movies.append(movie)
                 print(len(res), res[0]['kind'])
             else:
                 access = 'local'
