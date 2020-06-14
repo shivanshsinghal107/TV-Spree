@@ -12,6 +12,12 @@
   {% if 'movie' in movie['kind'] %}
     <div>Duration: {{movie['duration']}} minutes</div>
     <div>Release Date: {{movie['release']}}</div>
+    {% if movie['budget'] != "NA" %}
+      <div>Budget: {{movie['budget']}}</div>
+    {% endif %}
+    {% if movie['worldwide_gross'] != "NA" %}
+      <div>Worldwide Collection: {{movie['worldwide_gross']}}</div>
+    {% endif %}
   {% else %}
     <div>Seasons: {{movie['seasons']}}</div>
     <div>Years: {{movie['release']}}</div>
@@ -23,10 +29,10 @@
   <br><br>
   {% set urls = movie['cast_url'].split(', ') %}
   {% set names = movie['cast'].split(', ') %}
-  <div class="row">
+  <div class="grid-container">
     {% for url in urls %}
-      <div class="column">
-        <img src="{{url}}" style="width:100px;height:150px;margin-left:5px;margin-right:10px;float:left;" alt="cover photo">
+      <div class="grid-item">
+        <img src="{{url}}" style="width:100px;height:150px;margin-left:5px;margin-right:10px;" alt="cover photo">
         <figcaption>{{names[loop.index-1]}}</figcaption>
       </div>
     {% endfor %}
