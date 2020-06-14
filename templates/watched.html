@@ -9,32 +9,25 @@
   <a href = "/">Hey {{curruser}}</a>
   <a href = "/logout">Logout</a>
   <br><br>
-  {% for m in movies %}
-    <img src="{{m['cover_url']}}" style="width:100px;height:150px;margin-left:5px;margin-right:15px;float:left;" alt="cover photo">
-      <br>
-      <div>{{loop.index}}. {{m.title}}</div>
-      {% if 'movie' in m['kind'] %}
-        <div>Release Date: {{m.release}}</div>
-      {% else %}
-        <div>Years: {{m.release}}</div>
-      {% endif %}
-      {% if 'movie' in m['kind'] %}
-        <div>Duration: {{m.duration}} minutes</div>
-      {% else %}
-        <div>Avg. Duration: {{m.duration}} minutes</div>
-      {% endif %}
-      <div>Rating: {{m.rating}}</div>
-      <div>Genres: {{m.genres}}</div>
-      {% set urls = m.cast_url.split(', ') %}
-      {% set names = m.cast.split(', ') %}
-      <div class="row">
-        {% for url in urls %}
-          <div class="column">
-            <img src="{{url}}" style="width:50px;height:75px;margin-left:5px;margin-right:10px;float:left;" alt="cover photo">
-            <figcaption>{{names[loop.index-1]}}</figcaption>
-          </div>
-        {% endfor %}
+  <div class="grid-container">
+    {% for m in movies %}
+      <div class="grid-item">
+        <a href="{{url_for('description', id = m['id'], movie_object = dict(m), access = 'local')}}">
+          <img src="{{m['cover_url']}}" style="width:250px;height:375px;" alt="cover photo">
+        </a>
+        {% if 'movie' in m['kind'] %}
+          <div>{{m.title}} ({{m.release[7:11]}})</div>
+          <div>Duration: {{m.duration}} minutes</div>
+        {% else %}
+          <div>{{m.title}} ({{m.release}})</div>
+          <div>Avg. Duration: {{m.duration}} minutes</div>
+        {% endif %}
+        <div>Your Rating: {{ratings[loop.index-1]}}/10</div>
+        <div>Genres: {{m.genres}}</div>
+        <form action="{{url_for('removeWatched', id = m['id'])}}">
+            <button type="submit" class="btn btn-primary">Remove</button>
+        </form>
       </div>
-    <br><br>
-  {% endfor %}
+    {% endfor %}
+  </div>
 {% endblock %}
