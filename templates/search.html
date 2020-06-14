@@ -7,165 +7,278 @@
 {% block body %}
   <a href="/">Home</a>
   {% if loginstatus == 'True' %}
-    <a href="/watched/{{curruser}}">My Watch list</a>
+    <a href="/watched/{{curruser}}">my watch list</a>
     <a href = "/logout">Logout</a>
   {% else %}
     <a href = "/login">Login</a>
     <a href = "/register">Register</a>
   {% endif %}
   <br><br>
-  <div>
-  {% for movie in movies %}
-    {% if 'movie' in movie['kind'] %}
-      {% if access == 'imdb' %}
-        {% set cast = movie['cast'][:5] %}
-        {% if 'plot outline' in movie.keys() %}
-          {% set plot = movie['plot outline'] %}
+  <div class="grid-container">
+    {% for movie in movies %}
+      <div class="grid-item">
+        {% if 'movie' in movie['kind'] %}
+          {% if access[loop.index-1] == 'imdb' %}
+            {% if 'cast' in movie.keys() %}
+              {% if movie['cast'][0] in movie['cast'] %}
+                {% set c1 = movie['cast'][0].personID %}
+                {% set r1 = movie['cast'][0].currentRole['name'] %}
+              {% else %}
+                {% set c1 = "" %}
+                {% set r1 = "" %}
+              {% endif %}
+              {% if movie['cast'][1] in movie['cast'] %}
+                {% set c2 = movie['cast'][1].personID %}
+                {% set r2 = movie['cast'][1].currentRole['name'] %}
+              {% else %}
+                {% set c2 = "" %}
+                {% set r2 = "" %}
+              {% endif %}
+              {% if movie['cast'][2] in movie['cast'] %}
+                {% set c3 = movie['cast'][2].personID %}
+                {% set r3 = movie['cast'][2].currentRole['name'] %}
+              {% else %}
+                {% set c3 = "" %}
+                {% set r3 = "" %}
+              {% endif %}
+              {% if movie['cast'][3] in movie['cast'] %}
+                {% set c4 = movie['cast'][3].personID %}
+                {% set r4 = movie['cast'][3].currentRole['name'] %}
+              {% else %}
+                {% set c4 = "" %}
+                {% set r4 = "" %}
+              {% endif %}
+              {% if movie['cast'][4] in movie['cast'] %}
+                {% set c5 = movie['cast'][4].personID %}
+                {% set r5 = movie['cast'][4].currentRole['name'] %}
+              {% else %}
+                {% set c5 = "" %}
+                {% set r5 = "" %}
+              {% endif %}
+            {% else %}
+              {% set c1 = "" %}
+              {% set r1 = "" %}
+              {% set c2 = "" %}
+              {% set r2 = "" %}
+              {% set c3 = "" %}
+              {% set r3 = "" %}
+              {% set c4 = "" %}
+              {% set r4 = "" %}
+              {% set c5 = "" %}
+              {% set r5 = "" %}
+            {% endif %}
+            {% if 'plot outline' in movie.keys() %}
+              {% set plot = movie['plot outline'] %}
+            {% else %}
+              {% if 'plot' in movie.keys() %}
+                {% set plot = movie['plot'][0] %}
+              {% else %}
+                {% set plot = "NA" %}
+              {% endif %}
+            {% endif %}
+            {% if 'runtimes' in movie.keys() %}
+              {% set duration = movie['runtimes'][0] %}
+            {% else %}
+              {% set duration = "NA" %}
+            {% endif %}
+            {% if 'box office' in movie.keys() %}
+              {% set budget = movie['box office']['Budget'] %}
+              {% if 'Cumulative Worldwide Gross' in movie['box office'].keys() %}
+                {% set gross = movie['box office']['Cumulative Worldwide Gross'] %}
+              {% else %}
+                {% set gross = "NA" %}
+              {% endif %}
+            {% else %}
+              {% set budget = "NA" %}
+              {% set gross = "NA" %}
+            {% endif %}
+            {% if 'original air date' in movie.keys() %}
+              {% set release = movie['original air date'][:11] %}
+            {% else %}
+              {% set release = "NA" %}
+            {% endif %}
+            <a href="{{url_for('description', id = movie.movieID, movie_object = {'title': movie['title'], 'kind': movie['kind'], 'release': release, 'rating': movie['rating'], 'duration': duration, 'budget': budget, 'worldwide_gross': gross, 'genres': movie['genres'], 'cast': [c1, c2, c3, c4, c5], 'roles': [r1, r2, r3, r4, r5], 'summary': plot, 'cover_url': movie['full-size cover url']}, access = access)}}">
+              <img src="{{movie['full-size cover url']}}" style="width:250px;height:375px" alt="cover photo">
+            </a>
+            {% if 'original air date' in movie.keys() %}
+              <div>{{movie['title']}} ({{movie['original air date'][7:11]}})</div>
+            {% else %}
+              <div>{{movie['title']}}</div>
+            {% endif %}
+            <div>Rating: {{movie['rating']}}</div>
+            <div>Duration: {{duration}} minutes</div>
+            <div>Genres: {{movie['genres']}}</div>
+            <form action="{{url_for('addWatched', id = movie.movieID)}}" method="POST">
+              <div class="form-group">
+                Rate this:
+                <select name="user_rating">
+                  <option value="0" selected>0</option>
+                  <option value="1">1</option>
+                  <option value="2">2</option>
+                  <option value="3">3</option>
+                  <option value="4">4</option>
+                  <option value="5">5</option>
+                  <option value="6">6</option>
+                  <option value="7">7</option>
+                  <option value="8">8</option>
+                  <option value="9">9</option>
+                  <option value="10">10</option>
+                </select>
+              </div>
+              <button type="submit" class="btn btn-primary">Watched</button>
+            </form>
+          {% else %}
+            <a href="{{url_for('description', id = movie['id'], movie_object = dict(movie), access = access)}}">
+              <img src="{{movie['cover_url']}}" style="width:250px;height:375px;" alt="cover photo">
+            </a>
+            {% if movie['release'] != "" %}
+              <div>{{movie['title']}} ({{movie['release'][7:11]}})</div>
+            {% else %}
+              <div>{{movie['title']}}</div>
+            {% endif %}
+            <div>Rating: {{movie['rating']}}</div>
+            <div>Duration: {{movie['duration']}} minutes</div>
+            <div>Genres: {{movie['genres']}}</div>
+            <form action="{{url_for('addWatched', id = movie['id'])}}" method="POST">
+              <div class="form-group">
+                Rate this:
+                <select name="user_rating">
+                  <option value="0" selected>0</option>
+                  <option value="1">1</option>
+                  <option value="2">2</option>
+                  <option value="3">3</option>
+                  <option value="4">4</option>
+                  <option value="5">5</option>
+                  <option value="6">6</option>
+                  <option value="7">7</option>
+                  <option value="8">8</option>
+                  <option value="9">9</option>
+                  <option value="10">10</option>
+                </select>
+              </div>
+              <button type="submit" class="btn btn-primary">Watched</button>
+            </form>
+          {% endif %}
         {% else %}
-          {% set plot = "" %}
+          {% if access[loop.index-1] == 'imdb' %}
+            {% if 'cast' in movie.keys() %}
+              {% if movie['cast'][0] in movie['cast'] %}
+                {% set c1 = movie['cast'][0].personID %}
+                {% set r1 = movie['cast'][0].currentRole['name'] %}
+              {% else %}
+                {% set c1 = "" %}
+                {% set r1 = "" %}
+              {% endif %}
+              {% if movie['cast'][1] in movie['cast'] %}
+                {% set c2 = movie['cast'][1].personID %}
+                {% set r2 = movie['cast'][1].currentRole['name'] %}
+              {% else %}
+                {% set c2 = "" %}
+                {% set r2 = "" %}
+              {% endif %}
+              {% if movie['cast'][2] in movie['cast'] %}
+                {% set c3 = movie['cast'][2].personID %}
+                {% set r3 = movie['cast'][2].currentRole['name'] %}
+              {% else %}
+                {% set c3 = "" %}
+                {% set r3 = "" %}
+              {% endif %}
+              {% if movie['cast'][3] in movie['cast'] %}
+                {% set c4 = movie['cast'][3].personID %}
+                {% set r4 = movie['cast'][3].currentRole['name'] %}
+              {% else %}
+                {% set c4 = "" %}
+                {% set r4 = "" %}
+              {% endif %}
+              {% if movie['cast'][4] in movie['cast'] %}
+                {% set c5 = movie['cast'][4].personID %}
+                {% set r5 = movie['cast'][4].currentRole['name'] %}
+              {% else %}
+                {% set c5 = "" %}
+                {% set r5 = "" %}
+              {% endif %}
+            {% else %}
+              {% set c1 = "" %}
+              {% set r1 = "" %}
+              {% set c2 = "" %}
+              {% set r2 = "" %}
+              {% set c3 = "" %}
+              {% set r3 = "" %}
+              {% set c4 = "" %}
+              {% set r4 = "" %}
+              {% set c5 = "" %}
+              {% set r5 = "" %}
+            {% endif %}
+            {% if 'plot outline' in movie.keys() %}
+              {% set plot = movie['plot outline'] %}
+            {% else %}
+              {% if 'plot' in movie.keys() %}
+                {% set plot = movie['plot'][0] %}
+              {% else %}
+                {% set plot = "NA" %}
+              {% endif %}
+            {% endif %}
+            {% if 'runtimes' in movie.keys() %}
+              {% set duration = movie['runtimes'][0] %}
+            {% else %}
+              {% set duration = "NA" %}
+            {% endif %}
+            <a href="{{url_for('description', id = movie.movieID, movie_object = {'title': movie['title'], 'kind': movie['kind'], 'release': movie['series years'], 'rating': movie['rating'], 'duration': duration, 'genres': movie['genres'], 'seasons': movie['number of seasons'], 'episodes': movie['number of episodes'], 'cast': [c1, c2, c3, c4, c5], 'roles': [r1, r2, r3, r4, r5], 'summary': plot, 'cover_url': movie['full-size cover url']}, access = access)}}">
+              <img src="{{movie['full-size cover url']}}" style="width:250px;height:375px;" alt="cover photo">
+            </a>
+            <div>{{movie['title']}} ({{movie['series years']}})</div>
+            <div>Seasons: {{movie['number of seasons']}}</div>
+            <div>Rating: {{movie['rating']}}</div>
+            <div>Genres: {{movie['genres']}}</div>
+            <form action="{{url_for('addWatched', id = movie.movieID)}}" method="POST">
+              <div class="form-group">
+                Rate this:
+                <select name="user_rating">
+                  <option value="0" selected>0</option>
+                  <option value="1">1</option>
+                  <option value="2">2</option>
+                  <option value="3">3</option>
+                  <option value="4">4</option>
+                  <option value="5">5</option>
+                  <option value="6">6</option>
+                  <option value="7">7</option>
+                  <option value="8">8</option>
+                  <option value="9">9</option>
+                  <option value="10">10</option>
+                </select>
+              </div>
+              <button type="submit" class="btn btn-primary">Watched</button>
+            </form>
+          {% else %}
+            <a href="{{url_for('description', id = movie['id'], movie_object = dict(movie), access = access)}}">
+              <img src="{{movie['cover_url']}}" style="width:250px;height:375px;" alt="cover photo">
+            </a>
+            <div>{{movie['title']}} ({{movie['release']}})</div>
+            <div>Season: {{movie['seasons']}}</div>
+            <div>Rating: {{movie['rating']}}</div>
+            <div>Genres: {{movie['genres']}}</div>
+            <form action="{{url_for('addWatched', id = movie['id'])}}" method="POST">
+              <div class="form-group">
+                Rate this:
+                <select name="user_rating">
+                  <option value="0" selected>0</option>
+                  <option value="1">1</option>
+                  <option value="2">2</option>
+                  <option value="3">3</option>
+                  <option value="4">4</option>
+                  <option value="5">5</option>
+                  <option value="6">6</option>
+                  <option value="7">7</option>
+                  <option value="8">8</option>
+                  <option value="9">9</option>
+                  <option value="10">10</option>
+                </select>
+              </div>
+              <button type="submit" class="btn btn-primary">Watched</button>
+            </form>
+          {% endif %}
         {% endif %}
-        {% if 'duration' in movie.keys() %}
-          {% set duration = movie['runtimes'][0] %}
-        {% else %}
-          {% set duration = "" %}
-        {% endif %}
-        <a href="{{url_for('description', id = movie.movieID, movie_object = {'title': movie['title'], 'release': movie['original air date'], 'rating': movie['rating'], 'duration': duration, 'genres': movie['genres'], 'cast': [cast[0].personID, cast[1].personID, cast[2].personID, cast[3].personID, cast[4].personID], 'roles': [cast[0].currentRole['name'], cast[1].currentRole['name'], cast[2].currentRole['name'], cast[3].currentRole['name'], cast[4].currentRole['name']], 'summary': plot, 'cover_url': movie['full-size cover url']}, access = access)}}">
-          <img src="{{movie['full-size cover url']}}" style="width:150px;height:225px;margin-left:5px;margin-right:15px;float:left;" alt="cover photo">
-        </a>
-        <div>{{movie['title']}}</div>
-        <div>Release Date: {{movie['original air date']}}</div>
-        <div>Rating: {{movie['rating']}}</div>
-        <div>Duration: {{duration}} minutes</div>
-        <div>Genres: {{movie['genres']}}</div>
-        <form method="post">
-          Rate:
-          <select name="user_rating">
-            <option value="0" selected>0</option>
-            <option value="1">1</option>
-            <option value="2">2</option>
-            <option value="3">3</option>
-            <option value="4">4</option>
-            <option value="5">5</option>
-            <option value="6">6</option>
-            <option value="7">7</option>
-            <option value="8">8</option>
-            <option value="9">9</option>
-            <option value="10">10</option>
-          </select>
-        </form>
-        <br>
-        <form action="{{url_for('addWatched', id = movie.movieID)}}">
-            <button type="submit" class="btn btn-primary">Watched</button>
-        </form>
-        <br>
-      {% else %}
-        <a href="{{url_for('description', id = movie['id'], movie_object = dict(movie), access = access)}}">
-          <img src="{{movie['cover_url']}}" style="width:150px;height:225px;margin-left:5px;margin-right:15px;float:left;" alt="cover photo">
-        </a>
-        <div>{{movie['title']}}</div>
-        <div>Release Date: {{movie['release_date']}}</div>
-        <div>Rating: {{movie['rating']}}</div>
-        <div>Duration: {{movie['duration']}} minutes</div>
-        <div>Genres: {{movie['genres']}}</div>
-        <form>
-          Rate:
-          <select name="user_rating">
-            <option value="0" selected>0</option>
-            <option value="1">1</option>
-            <option value="2">2</option>
-            <option value="3">3</option>
-            <option value="4">4</option>
-            <option value="5">5</option>
-            <option value="6">6</option>
-            <option value="7">7</option>
-            <option value="8">8</option>
-            <option value="9">9</option>
-            <option value="10">10</option>
-          </select>
-        </form>
-        <br>
-        <form action="{{url_for('addWatched', id = movie['id'])}}">
-            <button type="submit" class="btn btn-primary">Watched</button>
-        </form>
-        <br>
-      {% endif %}
-    {% else %}
-      {% if access == 'imdb' %}
-        {% set cast = movie['cast'][:5] %}
-        {% if 'plot outline' in movie.keys() %}
-          {% set plot = movie['plot outline'] %}
-        {% else %}
-          {% set plot = "" %}
-        {% endif %}
-        {% if 'duration' in movie.keys() %}
-          {% set duration = movie['runtimes'][0] %}
-        {% else %}
-          {% set duration = "" %}
-        {% endif %}
-        <a href="{{url_for('description', id = movie.movieID, movie_object = {'title': movie['title'], 'release': movie['series years'], 'rating': movie['rating'], 'duration': duration, 'genres': movie['genres'], 'seasons': movie['number of seasons'], 'episodes': movie['number of episodes'], 'cast': [cast[0].personID, cast[1].personID, cast[2].personID, cast[3].personID, cast[4].personID], 'roles': [cast[0].currentRole['name'], cast[1].currentRole['name'], cast[2].currentRole['name'], cast[3].currentRole['name'], cast[4].currentRole['name']], 'summary': plot, 'cover_url': movie['full-size cover url']}, access = access)}}">
-          <img src="{{movie['full-size cover url']}}" style="width:150px;height:225px;margin-left:5px;margin-right:15px;float:left;" alt="cover photo">
-        </a>
-        <div>{{movie['title']}}</div>
-        <div>Seasons: {{movie['number of seasons']}}</div>
-        <div>Year: {{movie['series years']}}</div>
-        <div>Rating: {{movie['rating']}}</div>
-        <div>Avg. Duration: {{duration}} minutes</div>
-        <div>Genres: {{movie['genres']}}</div>
-        <form>
-          Rate:
-          <select name="user_rating">
-            <option value="0" selected>0</option>
-            <option value="1">1</option>
-            <option value="2">2</option>
-            <option value="3">3</option>
-            <option value="4">4</option>
-            <option value="5">5</option>
-            <option value="6">6</option>
-            <option value="7">7</option>
-            <option value="8">8</option>
-            <option value="9">9</option>
-            <option value="10">10</option>
-          </select>
-        </form>
-        <br>
-        <form action="{{url_for('addWatched', id = movie.movieID)}}">
-            <button type="submit" class="btn btn-primary">Watched</button>
-        </form>
-        <br>
-      {% else %}
-        <a href="{{url_for('description', id = movie['id'], movie_object = dict(movie), access = access)}}">
-          <img src="{{movie['cover_url']}}" style="width:150px;height:225px;margin-left:5px;margin-right:15px;float:left;" alt="cover photo">
-        </a>
-        <div>{{movie['title']}}</div>
-        <div>Season: {{movie['seasons']}}</div>
-        <div>Year: {{movie['release']}}</div>
-        <div>Rating: {{movie['rating']}}</div>
-        <div>Avg. Duration: {{movie['duration']}} minutes</div>
-        <div>Genres: {{movie['genres']}}</div>
-        <form method="post">
-          Rate:
-          <select name="user_rating">
-            <option value="0" selected>0</option>
-            <option value="1">1</option>
-            <option value="2">2</option>
-            <option value="3">3</option>
-            <option value="4">4</option>
-            <option value="5">5</option>
-            <option value="6">6</option>
-            <option value="7">7</option>
-            <option value="8">8</option>
-            <option value="9">9</option>
-            <option value="10">10</option>
-          </select>
-        </form>
-        <br>
-        <form action="{{url_for('addWatched', id = movie['id'])}}">
-            <button type="submit" class="btn btn-primary">Watched</button>
-        </form>
-        <br>
-      {% endif %}
-    {% endif %}
-    </div>
-    <br>
-  {% endfor %}
+        </div>
+    {% endfor %}
+  </div>
 {% endblock %}
