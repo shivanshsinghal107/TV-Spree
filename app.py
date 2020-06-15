@@ -1,4 +1,5 @@
 import imdb
+import ast
 import os, datetime
 
 from flask import Flask, session, request, render_template, redirect
@@ -85,72 +86,84 @@ def search():
     if request.method == 'POST':
         title = request.form.get("search")
         if title:
-            search = f"%{title}%"
-            movies = []
-            access = []
-            data = db.execute("SELECT * FROM movies WHERE title LIKE :title", {"title": search}).fetchall()
-            res = ia.search_movie(title)
-            if len(data) > 0:
-                in_ids = []
-                for d in data:
-                    movies.append(d)
-                    access.append('local')
-                    in_ids.append(d.id)
-                    print("ddone")
-                #print(in_ids)
-                out_ids = []
-                for r in res:
-                    if r['title'].startswith(title.title()) & (r['kind'] == res[0]['kind']):
-                        out_ids.append(int(r.movieID))
-                #print(out_ids)
-                ids = list(set(in_ids)^set(out_ids))
-                #print(ids)
-                for id in ids:
-                    movie = ia.get_movie(id)
-                    movies.append(movie)
-                    access.append('imdb')
-                    print("done")
-            elif 'series' in res[0]['kind']:
-                data = db.execute("SELECT * FROM series WHERE title LIKE :title", {"title": search}).fetchall()
-                if len(data) > 0:
-                    print("series in database")
-                    movies.append(data[0])
-                    access.append('local')
-                else:
-                    print("series not in database")
-                    movie = ia.get_movie(res[0].movieID)
-                    ia.update(movie, 'episodes')
-                    movies.append(movie)
-                    access.append('imdb')
-            else:
-                print("movie not in database")
-                for r in res:
-                    if r['title'].startswith(title.title()) & (r['kind'] == res[0]['kind']):
-                        movie = ia.get_movie(r.movieID)
-                        movies.append(movie)
-                        access.append('imdb')
-                        print("done")
-            print(len(movies), movies[0]['kind'])
-            #if 'movie' in res[0]['kind']:
-            #    # getting one series for a movie like case of 'Warrior'
-            #    for r in res:
-            #        if r['title'].startswith(title.title()) & ('series' in r['kind']):
-            #            movie = ia.get_movie(r.movieID)
-            #            ia.update(movie, 'episodes')
-            #            movies.append(movie)
-            #            access.append('imdb')
-            #            print("done")
-            #            break
-            db.close()
-            if session.get("logged_in"):
-                return render_template("search.html", movies = movies, loginstatus = 'True', curruser = session["username"],
-                                        access = access)
-            else:
-                return render_template("search.html", movies = movies, loginstatus = 'False', access = access)
+            query = title.replace(" ", "+")
+            return redirect(f"http://127.0.0.1:5000/results/{query}")
         else:
             return "<script>alert('Please enter the query in the search box');window.location = 'http://127.0.0.1:5000/';</script>"
     else:
         return "<script>alert('Method not allowed');window.location = 'http://127.0.0.1:5000/';</script>"
+
+@app.route("/results/<query>", methods = ['GET', 'POST'])
+def result(query):
+    title = query.replace("+", " ")
+    search = f"%{title}%"
+    movies = []
+    access = []
+    data = db.execute("SELECT * FROM movies WHERE title LIKE :title", {"title": search}).fetchall()
+    res = ia.search_movie(title)
+    if len(data) > 0:
+        in_ids = []
+        for d in data:
+            movies.append(d)
+            access.append('local')
+            in_ids.append(int(d.id))
+            print("ddone")
+        print(in_ids)
+        out_ids = []
+        for r in res:
+            if (title.lower() in r['title'].lower()) & (r['kind'] == res[0]['kind']):
+                out_ids.append(int(r.movieID))
+        print(out_ids)
+        ids = list(set(out_ids).difference(in_ids))
+        print(ids)
+        for id in ids:
+            movie = ia.get_movie(id)
+            movies.append(movie)
+            access.append('imdb')
+            print("done")
+    elif 'series' in res[0]['kind']:
+        data = db.execute("SELECT * FROM series WHERE title LIKE :title", {"title": search}).fetchall()
+        if len(data) > 0:
+            print("series in database")
+            movies.append(data[0])
+            access.append('local')
+        else:
+            print("series not in database")
+            movie = ia.get_movie(res[0].movieID)
+            ia.update(movie, 'episodes')
+            movies.append(movie)
+            access.append('imdb')
+    else:
+        print("movie not in database")
+        for r in res:
+            if (title.lower() in r['title'].lower()) & (r['kind'] == res[0]['kind']):
+                movie = ia.get_movie(r.movieID)
+                movies.append(movie)
+                access.append('imdb')
+                print("done")
+    if len(movies) == 0 & len(res) > 0:
+        movie = ia.get_movie(res[0].movieID)
+        movies.append(movie)
+    print(len(movies), res[0]['kind'])
+    if len(movies) == 0:
+        db.close()
+        return "<script>alert('No results found');window.location = 'http://127.0.0.1:5000/';</script>"
+    #if 'movie' in res[0]['kind']:
+    #    # getting one series for a movie like case of 'Warrior'
+    #    for r in res:
+    #        if r['title'].startswith(title.title()) & ('series' in r['kind']):
+    #            movie = ia.get_movie(r.movieID)
+    #            ia.update(movie, 'episodes')
+    #            movies.append(movie)
+    #            access.append('imdb')
+    #            print("done")
+    #            break
+    db.close()
+    if session.get("logged_in"):
+        return render_template("search.html", movies = movies, loginstatus = 'True', curruser = session["username"],
+                                access = access)
+    else:
+        return render_template("search.html", movies = movies, loginstatus = 'False', access = access)
 
 @app.route("/watched/<username>", methods = ['GET'])
 def watched(username):
@@ -179,6 +192,13 @@ def watched(username):
 @app.route("/addWatched/<id>", methods = ['GET', 'POST'])
 def addWatched(id):
     if session.get("logged_in"):
+        access = request.args.get("access")
+        movie_object = request.args.get("movie_object")
+        print(type(movie_object))
+        print(movie_object)
+        m = ast.literal_eval(movie_object)
+        print(type(m))
+        print(m)
         user_rating = request.form.get("user_rating")
         date = str(datetime.datetime.utcnow())
         data = db.execute("SELECT * FROM movies WHERE id = :id", {"id": id}).fetchall()
@@ -186,66 +206,48 @@ def addWatched(id):
             data = db.execute("SELECT * FROM series WHERE id = :id", {"id": id}).fetchall()
         print(len(data))
         if len(data) <= 0:
-            m = ia.get_movie(id)
-            print("get_movie() done")
-            plot = "NA"
-            if 'plot outline' in m.keys():
-                plot = m['plot outline']
-            elif 'plot' in m.keys():
-                plot = m['plot'][0]
-            budget = "NA"
-            gross = "NA"
-            if 'box office' in m.keys():
-                budget = m['box office']['Budget']
-                if 'Cumulative Worldwide Gross' in m['box office'].keys():
-                    gross = m['box office']['Cumulative Worldwide Gross']
-            duration = "NA"
-            if 'runtimes' in m.keys():
-                duration = m['runtimes'][0]
-            release = "NA"
-            if 'original air date' in m.keys():
-                release = m['original air date'][:11]
             genres = ""
             for g in m['genres']:
                 genres += g + ", "
             genres = genres[:-2]
-            cast = ""
-            #cast_url = ""
-            for c in m['cast'][:5]:
-                cast += c['name'] + f"({c.currentRole}), "
-            #    p = ia.get_person(c.personID)
-            #    print("get_person() done")
-            #    if 'full-size headshot' in p.keys():
-            #        cast_url += p['full-size headshot'] + ", "
-            cast = cast[:-2]
-            #cast_url = cast_url[:-2]
+            cast_id = ""
+            for id in m['cast_id']:
+                cast_id += id + ", "
+            cast_id = cast_id[:-2]
+            if access == 'imdb':
+                cast = ""
+                #cast_url = ""
+                for i in range(0, len(m['cast'])):
+                    cast += m['cast'][i] + f"({m['roles'][i]}), "
+                cast = cast[:-2]
+            else:
+                cast = m['cast']
             if 'movie' in m['kind']:
-                db.execute("INSERT INTO movies (id, kind, title, release, rating, cast, genres, duration, budget, worldwide_gross, summary, cover_url) VALUES (:id, :kind, :title, :release, :rating, :cast, :genres, :duration, :budget, :worldwide_gross, :summary, :cover_url)", {"id": id, "kind": m['kind'], "title": m['title'], "release": release, "rating": m['rating'], "cast": cast, "genres": genres, "duration": duration, "budget": budget, "worldwide_gross": gross, "summary": plot, "cover_url": m['full-size cover url']})
+                db.execute("INSERT INTO movies (id, kind, title, release, rating, cast, cast_id, genres, duration, budget, worldwide_gross, summary, cover_url) VALUES (:id, :kind, :title, :release, :rating, :cast, :cast_id, :genres, :duration, :budget, :worldwide_gross, :summary, :cover_url)", {"id": m['id'], "kind": m['kind'], "title": m['title'], "release": m['release'], "rating": m['rating'], "cast": cast, "cast_id": cast_id, "genres": genres, "duration": m['duration'], "budget": m['budget'], "worldwide_gross": m['worldwide_gross'], "summary": m['summary'], "cover_url": m['cover_url']})
                 db.commit()
             elif 'series' in m['kind']:
-                ia.update(m, 'episodes')
-                db.execute("INSERT INTO series (id, kind, title, release, rating, cast, seasons, episodes, genres, duration, summary, cover_url) VALUES (:id, :kind, :title, :release, :rating, :cast, :seasons, :episodes, :genres, :duration, :summary, :cover_url)", {"id": id, "kind": m['kind'], "title": m['title'], "release": m['series years'], "rating": m['rating'], "cast": cast, "seasons": m['number of seasons'], "episodes": m['number of episodes'], "genres": genres, "duration": duration, "summary": plot, "cover_url": m['full-size cover url']})
+                db.execute("INSERT INTO series (id, kind, title, release, rating, cast, cast_id, seasons, episodes, genres, duration, summary, cover_url) VALUES (:id, :kind, :title, :release, :rating, :cast, :cast_id, :seasons, :episodes, :genres, :duration, :summary, :cover_url)", {"id": m['id'], "kind": m['kind'], "title": m['title'], "release": m['release'], "rating": m['rating'], "cast": cast, "cast_id": cast_id, "seasons": m['seasons'], "episodes": m['episodes'], "genres": genres, "duration": m['duration'], "summary": m['summary'], "cover_url": m['cover_url']})
                 db.commit()
             print(f"{m['title']} inserted")
-            data = db.execute("SELECT * FROM watched WHERE wid = :wid", {"wid": id}).fetchall()
+            data = db.execute("SELECT * FROM watched WHERE wid = :wid", {"wid": m['id']}).fetchall()
             if len(data) <= 0:
-                db.execute("INSERT INTO watched (wid, user_rating, kind, date, username) VALUES (:wid, :user_rating, :kind, :date, :username)", {"wid": id, "user_rating": user_rating, "kind": m['kind'], "date": date, "username": session["username"]})
+                db.execute("INSERT INTO watched (wid, user_rating, kind, date, username) VALUES (:wid, :user_rating, :kind, :date, :username)", {"wid": m['id'], "user_rating": user_rating, "kind": m['kind'], "date": date, "username": session["username"]})
                 db.commit()
                 db.close()
-                return "<script>alert('Added to Watched list'); window.location = 'http://127.0.0.1:5000/';</script>"
+                return "<script>alert('Added to Watched list'); window.location = window.history.back();</script>"
             else:
                 db.close()
-                return "<script>alert('You already watched this'); window.location = 'http://127.0.0.1:5000/';</script>"
+                return "<script>alert('You already watched this'); window.location = window.history.back();</script>"
         else:
-            d = db.execute("SELECT * FROM watched WHERE wid = :wid", {"wid": id}).fetchall()
+            d = db.execute("SELECT * FROM watched WHERE wid = :wid", {"wid": m['id']}).fetchall()
             if len(d) <= 0:
-                db.execute("INSERT INTO watched (wid, user_rating, kind, date, username) VALUES (:wid, :user_rating, :kind, :date, :username)", {"wid": id, "user_rating": user_rating, "kind": data[0]['kind'], "date": date, "username": session["username"]})
+                db.execute("INSERT INTO watched (wid, user_rating, kind, date, username) VALUES (:wid, :user_rating, :kind, :date, :username)", {"wid": m['id'], "user_rating": user_rating, "kind": data[0]['kind'], "date": date, "username": session["username"]})
                 db.commit()
                 db.close()
-                return "<script>alert('Added to Watched list'); window.location = 'http://127.0.0.1:5000/';</script>"
+                return "<script>alert('Added to Watched list'); window.location = window.history.back();</script>"
             else:
                 db.close()
-                return "<script>alert('You already watched this'); window.location = 'http://127.0.0.1:5000/';</script>"
+                return "<script>alert('You already watched this'); window.location = window.history.back();</script>"
     else:
         return "<script>alert('Please Login first'); window.location = 'http://127.0.0.1:5000/login';</script>"
 
@@ -265,21 +267,34 @@ def removeWatched(id):
 def description(id):
     access = request.args.get("access")
     movie_object = request.args.get("movie_object")
-    movie = eval(movie_object)
-    if access == 'imdb':
+    print(movie_object)
+    movie = ast.literal_eval(movie_object)
+    if access == 'local':
+        print("local")
+        cast_url = ""
+        ids = movie['cast_id'].split(', ')
+        print(len(ids))
+        for id in ids:
+            p = ia.get_person(id)
+            print("get_person() done")
+            if 'full-size headshot' in p.keys():
+                cast_url += p['full-size headshot'] + ", "
+        movie['cast_url'] = cast_url[:-2]
+    else:
+        print("imdb")
         genres = ""
         for g in movie['genres']:
             genres += g + ", "
         genres = genres[:-2]
         movie['genres'] = genres
-    cast = ""
-    cast_url = ""
-    for i in range(0, len(movie['cast'])):
-        p = ia.get_person(movie['cast'][i])
-        print("get_person() done")
-        cast += p['name'] + f"({movie['roles'][i]}), "
-        if 'full-size headshot' in p.keys():
-            cast_url += p['full-size headshot'] + ", "
-    movie['cast'] = cast[:-2]
-    movie['cast_url'] = cast_url[:-2]
+        cast = ""
+        cast_url = ""
+        for i in range(0, len(movie['cast_id'])):
+            p = ia.get_person(movie['cast_id'][i])
+            print("get_person() done")
+            cast += movie['cast'][i] + f"({movie['roles'][i]}), "
+            if 'full-size headshot' in p.keys():
+                cast_url += p['full-size headshot'] + ", "
+        movie['cast'] = cast[:-2]
+        movie['cast_url'] = cast_url[:-2]
     return render_template("description.html", movie = movie, access = access)
