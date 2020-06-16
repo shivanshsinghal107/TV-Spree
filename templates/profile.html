@@ -1,0 +1,31 @@
+{% extends "layout.html" %}
+
+{% block heading %}
+  {{curruser}} Profile
+{% endblock %}
+
+{% block body %}
+  <a href="/">Home</a>
+  <a href="/{{curruser}}/completed">my watch list</a>
+  <a href = "/logout">Logout</a>
+  <br><br>
+  <h4>
+    <div>Username: {{curruser}}</div>
+    <div>Movies Watched: {{movies}}</div>
+    <div>Series Watched: {{series}}</div>
+    <div>Hours Watched: {{hours}}</div>
+    {% if days > 7 %}
+      <div>Days Watched: {{days}}</div>
+      {% set binge = 'YES' %}
+    {% else %}
+      {% set binge = 'NO' %}
+    {% endif %}
+  </h4>
+  <h3>
+    <div>Are you a Binge Watcher: {{binge}}</div>
+  </h3>
+  <br><br>
+  <div>
+    <img src="data:image/png;base64, {{img_data}}">
+  </div>
+{% endblock %}
