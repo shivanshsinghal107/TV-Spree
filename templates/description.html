@@ -20,7 +20,11 @@
     {% endif %}
   {% else %}
     <div>Seasons: {{movie['seasons']}}</div>
-    <div>Years: {{movie['release']}}</div>
+    {% if movie['release'][-1] == '-' %}
+      <div>Years: {{movie['release']}}Ongoing</div>
+    {% else %}
+      <div>Years: {{movie['release']}}</div>
+    {% endif %}
     <div>Episodes: {{movie['episodes']}}</div>
     <div>Avg. Duration: {{movie['duration']}} minutes</div>
   {% endif %}
