@@ -1,8 +1,14 @@
 import imdb
 import ast
 import os, datetime
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from collections import Counter, OrderedDict
+from base64 import b64encode
+from io import BytesIO
 
-from flask import Flask, session, request, render_template, redirect
+from flask import Flask, session, request, render_template, redirect, url_for
 from flask_session import Session
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
@@ -165,32 +171,54 @@ def result(query):
     else:
         return render_template("search.html", movies = movies, loginstatus = 'False', access = access)
 
-@app.route("/watched/<username>", methods = ['GET'])
-def watched(username):
+@app.route("/<username>/<table>", methods = ['GET'])
+def curr_watchlist(username, table):
     if session.get("logged_in"):
         username = session["username"]
-        watched = db.execute("SELECT * FROM watched WHERE username = :username ORDER BY date DESC", {"username": username}).fetchall()
-        movies = []
-        ratings = []
-        for w in watched:
-            id = w.wid
-            mdata = db.execute("SELECT * FROM movies WHERE id = :id", {"id": id}).fetchall()
-            sdata = db.execute("SELECT * FROM series WHERE id = :id", {"id": id}).fetchall()
-            if len(mdata) > 0:
-                movies.append(mdata[0])
-                ratings.append(w.user_rating)
-            elif len(sdata) > 0:
-                movies.append(sdata[0])
-                ratings.append(w.user_rating)
-            else:
-                break
-        db.close()
-        return render_template("watched.html", curruser = username, movies = movies, ratings = ratings)
+        watched = db.execute(f"SELECT * FROM {table} WHERE username = :username ORDER BY date DESC", {"username": username}).fetchall()
+        if table == 'planning':
+            movies = []
+            for w in watched:
+                id = w.wid
+                mdata = db.execute("SELECT * FROM movies WHERE id = :id", {"id": id}).fetchall()
+                sdata = db.execute("SELECT * FROM series WHERE id = :id", {"id": id}).fetchall()
+                if len(mdata) > 0:
+                    movies.append(mdata[0])
+                elif len(sdata) > 0:
+                    movies.append(sdata[0])
+                else:
+                    break
+            db.close()
+            return render_template("watchlist.html", table = table, curruser = username, movies = movies)
+        else:
+            movies = []
+            ratings = []
+            for w in watched:
+                id = w.wid
+                mdata = db.execute("SELECT * FROM movies WHERE id = :id", {"id": id}).fetchall()
+                sdata = db.execute("SELECT * FROM series WHERE id = :id", {"id": id}).fetchall()
+                if len(mdata) > 0:
+                    movies.append(mdata[0])
+                    ratings.append(w.user_rating)
+                elif len(sdata) > 0:
+                    movies.append(sdata[0])
+                    ratings.append(w.user_rating)
+                else:
+                    break
+            db.close()
+            return render_template("watchlist.html", table = table, curruser = username, movies = movies, ratings = ratings)
     else:
         return "<script>alert('Please Login first'); window.location = 'http://127.0.0.1:5000/login';</script>"
 
-@app.route("/addWatched/<id>", methods = ['GET', 'POST'])
-def addWatched(id):
+#@app.route("/<username>/watchlist", methods = ['GET', 'POST'])
+#def watchlist(username):
+#    if session.get("logged_in"):
+#        return render_template("watch.html", curruser = username)
+#    else:
+#        return "<script>alert('Please Login first'); window.location = 'http://127.0.0.1:5000/login';</script>"
+
+@app.route("/add/<id>", methods = ['GET', 'POST'])
+def add(id):
     if session.get("logged_in"):
         access = request.args.get("access")
         movie_object = request.args.get("movie_object")
@@ -200,6 +228,7 @@ def addWatched(id):
         print(type(m))
         print(m)
         user_rating = request.form.get("user_rating")
+        table = request.form.get("status").lower()
         date = str(datetime.datetime.utcnow())
         data = db.execute("SELECT * FROM movies WHERE id = :id", {"id": id}).fetchall()
         if len(data) <= 0:
@@ -216,7 +245,6 @@ def addWatched(id):
             cast_id = cast_id[:-2]
             if access == 'imdb':
                 cast = ""
-                #cast_url = ""
                 for i in range(0, len(m['cast'])):
                     cast += m['cast'][i] + f"({m['roles'][i]}), "
                 cast = cast[:-2]
@@ -224,44 +252,89 @@ def addWatched(id):
                 cast = m['cast']
             if 'movie' in m['kind']:
                 db.execute("INSERT INTO movies (id, kind, title, release, rating, cast, cast_id, genres, duration, budget, worldwide_gross, summary, cover_url) VALUES (:id, :kind, :title, :release, :rating, :cast, :cast_id, :genres, :duration, :budget, :worldwide_gross, :summary, :cover_url)", {"id": m['id'], "kind": m['kind'], "title": m['title'], "release": m['release'], "rating": m['rating'], "cast": cast, "cast_id": cast_id, "genres": genres, "duration": m['duration'], "budget": m['budget'], "worldwide_gross": m['worldwide_gross'], "summary": m['summary'], "cover_url": m['cover_url']})
-                db.commit()
             elif 'series' in m['kind']:
                 db.execute("INSERT INTO series (id, kind, title, release, rating, cast, cast_id, seasons, episodes, genres, duration, summary, cover_url) VALUES (:id, :kind, :title, :release, :rating, :cast, :cast_id, :seasons, :episodes, :genres, :duration, :summary, :cover_url)", {"id": m['id'], "kind": m['kind'], "title": m['title'], "release": m['release'], "rating": m['rating'], "cast": cast, "cast_id": cast_id, "seasons": m['seasons'], "episodes": m['episodes'], "genres": genres, "duration": m['duration'], "summary": m['summary'], "cover_url": m['cover_url']})
-                db.commit()
+            db.commit()
             print(f"{m['title']} inserted")
-            data = db.execute("SELECT * FROM watched WHERE wid = :wid", {"wid": m['id']}).fetchall()
+            data = db.execute(f"SELECT * FROM {table} WHERE wid = :wid", {"wid": m['id']}).fetchall()
             if len(data) <= 0:
-                db.execute("INSERT INTO watched (wid, user_rating, kind, date, username) VALUES (:wid, :user_rating, :kind, :date, :username)", {"wid": m['id'], "user_rating": user_rating, "kind": m['kind'], "date": date, "username": session["username"]})
+                if table == 'planning':
+                    db.execute(f"INSERT INTO {table} (wid, kind, date, username) VALUES (:wid, :kind, :date, :username)", {"wid": m['id'], "kind": m['kind'], "date": date, "username": session["username"]})
+                else:
+                    db.execute(f"INSERT INTO {table} (wid, user_rating, kind, date, username) VALUES (:wid, :user_rating, :kind, :date, :username)", {"wid": m['id'], "user_rating": user_rating, "kind": m['kind'], "date": date, "username": session["username"]})
                 db.commit()
                 db.close()
-                return "<script>alert('Added to Watched list'); window.location = window.history.back();</script>"
+                return "<script>alert('Added to watch list'); window.location = window.history.back();</script>"
             else:
                 db.close()
-                return "<script>alert('You already watched this'); window.location = window.history.back();</script>"
+                return "<script>alert('Already in the watch list'); window.location = window.history.back();</script>"
         else:
-            d = db.execute("SELECT * FROM watched WHERE wid = :wid", {"wid": m['id']}).fetchall()
+            d = db.execute(f"SELECT * FROM {table} WHERE wid = :wid", {"wid": m['id']}).fetchall()
             if len(d) <= 0:
-                db.execute("INSERT INTO watched (wid, user_rating, kind, date, username) VALUES (:wid, :user_rating, :kind, :date, :username)", {"wid": m['id'], "user_rating": user_rating, "kind": data[0]['kind'], "date": date, "username": session["username"]})
+                if table == 'planning':
+                    db.execute(f"INSERT INTO {table} (wid, kind, date, username) VALUES (:wid, :kind, :date, :username)", {"wid": m['id'], "kind": m['kind'], "date": date, "username": session["username"]})
+                else:
+                    db.execute(f"INSERT INTO {table} (wid, user_rating, kind, date, username) VALUES (:wid, :user_rating, :kind, :date, :username)", {"wid": m['id'], "user_rating": user_rating, "kind": m['kind'], "date": date, "username": session["username"]})
                 db.commit()
                 db.close()
-                return "<script>alert('Added to Watched list'); window.location = window.history.back();</script>"
+                return "<script>alert('Added to watch list'); window.location = window.history.back();</script>"
             else:
                 db.close()
-                return "<script>alert('You already watched this'); window.location = window.history.back();</script>"
+                return "<script>alert('Already in the watch list'); window.location = window.history.back();</script>"
     else:
-        return "<script>alert('Please Login first'); window.location = 'http://127.0.0.1:5000/login';</script>"
+        return "<script>alert('Please login first'); window.location = 'http://127.0.0.1:5000/login';</script>"
 
-@app.route("/removeWatched/<id>", methods = ['GET', 'POST'])
-def removeWatched(id):
+@app.route("/removeWatched/<id>/<table>", methods = ['GET', 'POST'])
+def removeWatched(id, table):
     if session.get("logged_in"):
-        db.execute("DELETE FROM watched WHERE wid = :wid", {"wid": id})
+        db.execute(f"DELETE FROM {table} WHERE wid = :wid", {"wid": id})
         db.commit()
         db.close()
         print("deleted")
         username = session["username"]
-        return redirect(f"http://127.0.0.1:5000/watched/{username}")
+        return redirect(f"http://127.0.0.1:5000/{username}/watchlist")
     else:
-        return "<script>alert('Please Login first'); window.location = 'http://127.0.0.1:5000/login';</script>"
+        return "<script>alert('Please login first'); window.location = 'http://127.0.0.1:5000/login';</script>"
+
+@app.route("/addto", methods = ['GET', 'POST'])
+def addto():
+    if request.method == 'POST':
+        remove_table = request.args.get("table").lower()
+        id = request.args.get("id")
+        add_table = request.form.get("addto").lower()
+        username = session["username"]
+        if remove_table == 'planning':
+            user_rating = request.form.get("user_rating")
+            return redirect(f"http://127.0.0.1:5000/moveto/{remove_table}/{add_table}/{id}/{user_rating}")
+        else:
+            return redirect(f"http://127.0.0.1:5000/moveto/{remove_table}/{add_table}/{id}")
+    else:
+        return "<script>alert('Method not allowed'); window.location = window.history.back();</script>"
+
+@app.route("/moveto/<remove_table>/<add_table>/<id>", methods = ['GET', 'POST'])
+def moveto(remove_table, add_table, id):
+    date = str(datetime.datetime.utcnow())
+    username = session["username"]
+    data = db.execute(f"SELECT * FROM {remove_table} WHERE wid = :wid", {"wid": id}).fetchall()[0]
+    if add_table == 'planning':
+        db.execute("INSERT INTO planning (wid, kind, date, username) VALUES (:wid, :kind, :date, :username)", {"wid": id, "kind": data.kind, "date": date, "username": username})
+    else:
+        db.execute(f"INSERT INTO {add_table} (wid, user_rating, kind, date, username) VALUES (:wid, :user_rating, :kind, :date, :username)", {"wid": id, "user_rating": data.user_rating, "kind": data.kind, "date": date, "username": username})
+    db.execute(f"DELETE FROM {remove_table} WHERE wid = :wid", {"wid": id})
+    db.commit()
+    db.close()
+    return redirect(f"http://127.0.0.1:5000/{username}/{remove_table}")
+
+@app.route("/moveto/<remove_table>/<add_table>/<id>/<user_rating>", methods = ['GET', 'POST'])
+def move_from_planning(remove_table, add_table, id, user_rating):
+    date = str(datetime.datetime.utcnow())
+    username = session["username"]
+    data = db.execute("SELECT * FROM planning WHERE wid = :wid", {"wid": id}).fetchall()[0]
+    db.execute(f"INSERT INTO {add_table} (wid, user_rating, kind, date, username) VALUES (:wid, :user_rating, :kind, :date, :username)", {"wid": id, "user_rating": user_rating, "kind": data.kind, "date": date, "username": username})
+    db.execute("DELETE FROM planning WHERE wid = :wid", {"wid": id})
+    db.commit()
+    db.close()
+    return redirect(f"http://127.0.0.1:5000/{username}/{remove_table}")
 
 @app.route("/<id>/description", methods = ['GET', 'POST'])
 def description(id):
@@ -298,3 +371,64 @@ def description(id):
         movie['cast'] = cast[:-2]
         movie['cast_url'] = cast_url[:-2]
     return render_template("description.html", movie = movie, access = access)
+
+@app.route("/<username>", methods = ['GET', 'POST'])
+def profile(username):
+    if session.get("logged_in"):
+        tables = ['completed', 'watching', 'paused', 'dropped']
+        movies = []
+        series = []
+        genres = []
+        hours = 0
+        for table in tables:
+            mov = 'movie'
+            ser = 'series'
+            msearch = f'%{mov}%'
+            ssearch = f'%{ser}%'
+            for m in (db.execute(f"SELECT * FROM {table} WHERE kind LIKE :kind", {"kind": msearch}).fetchall()):
+                movies.append(m)
+            for s in (db.execute(f"SELECT * FROM {table} WHERE kind LIKE :kind", {"kind": ssearch}).fetchall()):
+                series.append(s)
+        for m in movies:
+            data = db.execute("SELECT * FROM movies WHERE id = :id", {"id": m.wid}).fetchall()[0]
+            if data.duration != 'NA':
+                hours += int(data.duration)
+            gdata = data['genres'].split(', ')
+            for g in gdata:
+                genres.append(g)
+        for s in series:
+            data = db.execute("SELECT * FROM series WHERE id = :id", {"id": s.wid}).fetchall()[0]
+            if data.duration != 'NA':
+                hours += int(data.episodes) * int(data.duration)
+            gdata = data['genres'].split(', ')
+            for g in gdata:
+                genres.append(g)
+        c = dict(Counter(genres))
+        sorted_count = sorted(c.items(), key = lambda x: x[1])
+        counts = OrderedDict(sorted_count)
+        df = pd.DataFrame(counts.items(), columns=['Genre', 'Value'])
+        df['Percent'] = round((df['Value'] / sum(df['Value']))*100).astype(int)
+        fig = plt.figure()
+        plt.barh(range(len(df)), df['Percent'], align = 'center')
+        plt.yticks(range(len(df)), df['Genre'])
+        plt.xlim(0, np.max(df['Percent'])*1.4)
+        for i, v in enumerate(df['Percent']):
+            plt.text(v + 0.5, i, str(v)+"%", color='black')
+        plt.xticks([])
+        plt.box(False)
+        #for i, pr in enumerate(df["Percent"]):
+            #plt.text(s=p, x=1, y=i, color="w", verticalalignment="center", size=12)
+            #plt.text(s=str(pr)+"%", x=df['Value'][i]-1, y=i, color="w", verticalalignment="center", horizontalalignment="left", size=9)
+        #plt.axis("off")
+        #plt.yticks(rotation = 45, horizontalalignment = 'right')
+        #plt.ylabel("Genres")
+        img = BytesIO()
+        fig.savefig(img, format = 'png', bbox_inches = 'tight')
+        img.seek(0)
+        encoded = b64encode(img.getvalue())
+        hours /= 60
+        days = round(hours/24)
+        db.close()
+        return render_template("profile.html", curruser = session["username"], movies = len(movies), series = len(series), hours = round(hours), days = days, img_data = encoded.decode('utf-8'))
+    else:
+        return "<script>alert('Please login first'); window.location = 'http://127.0.0.1:5000/login';</script>"
