@@ -1,0 +1,237 @@
+{% extends "layout.html" %}
+
+{% block heading %}
+  {{curruser}}'s {{table}} List
+{% endblock %}
+
+{% block body %}
+  <a href="/">Home</a>
+  <a href = "/{{curruser}}">Hey {{curruser}}</a>
+  <a href = "/logout">Logout</a>
+  <br><br>
+  {% if table == 'completed' %}
+    <a href = "/{{curruser}}/watching">Watching</a>
+    <a href = "/{{curruser}}/paused">Paused</a>
+    <a href = "/{{curruser}}/planning">Planning</a>
+    <a href = "/{{curruser}}/dropped">Dropped</a>
+    <div class="grid-container">
+      {% for m in movies %}
+        <div class="grid-item">
+          <a href="{{url_for('description', id = m['id'], movie_object = dict(m), access = 'local')}}">
+            <img src="{{m['cover_url']}}" style="width:250px;height:375px;" alt="cover photo">
+          </a>
+          {% if 'movie' in m['kind'] %}
+            <div>{{m.title}} ({{m.release[7:11]}})</div>
+            <div>Duration: {{m.duration}} minutes</div>
+          {% else %}
+            {% if m['release'][-1] == '-' %}
+              <div>{{m['title']}} ({{m['release']}}Ongoing)</div>
+            {% else %}
+              <div>{{m['title']}} ({{m['release']}})</div>
+            {% endif %}
+            <div>Avg. Duration: {{m.duration}} minutes</div>
+          {% endif %}
+          <div>Your Rating: {{ratings[loop.index-1]}}/10</div>
+          <div>Genres: {{m.genres}}</div>
+          <form action="{{ url_for('addto', table = table, id = m['id']) }}" method="POST">
+            <div class="form-group">
+              <select class="form-control" name="addto">
+                <option value="Watching">Watching</option>
+                <option value="Paused">Paused</option>
+                <option value="Planning">Planning</option>
+                <option value="Dropped">Dropped</option>
+              </select>
+              <button type="submit" class="btn btn-primary">Add</button>
+            </div>
+          </form>
+          <form action="{{url_for('removeWatched', id = m['id'], table = table)}}">
+              <button type="submit" class="btn btn-primary">Remove</button>
+          </form>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+  {% if table == 'watching' %}
+    <a href = "/{{curruser}}/completed">Completed</a>
+    <a href = "/{{curruser}}/paused">Paused</a>
+    <a href = "/{{curruser}}/planning">Planning</a>
+    <a href = "/{{curruser}}/dropped">Dropped</a>
+    <div class="grid-container">
+      {% for m in movies %}
+        <div class="grid-item">
+          <a href="{{url_for('description', id = m['id'], movie_object = dict(m), access = 'local')}}">
+            <img src="{{m['cover_url']}}" style="width:250px;height:375px;" alt="cover photo">
+          </a>
+          {% if 'movie' in m['kind'] %}
+            <div>{{m.title}} ({{m.release[7:11]}})</div>
+            <div>Duration: {{m.duration}} minutes</div>
+          {% else %}
+            {% if m['release'][-1] == '-' %}
+              <div>{{m['title']}} ({{m['release']}}Ongoing)</div>
+            {% else %}
+              <div>{{m['title']}} ({{m['release']}})</div>
+            {% endif %}
+            <div>Avg. Duration: {{m.duration}} minutes</div>
+          {% endif %}
+          <div>Your Rating: {{ratings[loop.index-1]}}/10</div>
+          <div>Genres: {{m.genres}}</div>
+          <form action="{{ url_for('addto', table = table, id = m['id']) }}" method="POST">
+            <div class="form-group">
+              <select class="form-control" name="addto">
+                <option value="Completed" selected>Completed</option>
+                <option value="Paused">Paused</option>
+                <option value="Planning">Planning</option>
+                <option value="Dropped">Dropped</option>
+              </select>
+              <button type="submit" class="btn btn-primary">Add</button>
+            </div>
+          </form>
+          <form action="{{url_for('removeWatched', id = m['id'], table = table)}}">
+              <button type="submit" class="btn btn-primary">Remove</button>
+          </form>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+  {% if table == 'paused' %}
+    <a href = "/{{curruser}}/completed">Completed</a>
+    <a href = "/{{curruser}}/watching">Watching</a>
+    <a href = "/{{curruser}}/planning">Planning</a>
+    <a href = "/{{curruser}}/dropped">Dropped</a>
+    <div class="grid-container">
+      {% for m in movies %}
+        <div class="grid-item">
+          <a href="{{url_for('description', id = m['id'], movie_object = dict(m), access = 'local')}}">
+            <img src="{{m['cover_url']}}" style="width:250px;height:375px;" alt="cover photo">
+          </a>
+          {% if 'movie' in m['kind'] %}
+            <div>{{m.title}} ({{m.release[7:11]}})</div>
+            <div>Duration: {{m.duration}} minutes</div>
+          {% else %}
+            {% if m['release'][-1] == '-' %}
+              <div>{{m['title']}} ({{m['release']}}Ongoing)</div>
+            {% else %}
+              <div>{{m['title']}} ({{m['release']}})</div>
+            {% endif %}
+            <div>Avg. Duration: {{m.duration}} minutes</div>
+          {% endif %}
+          <div>Your Rating: {{ratings[loop.index-1]}}/10</div>
+          <div>Genres: {{m.genres}}</div>
+          <form action="{{ url_for('addto', table = table, id = m['id']) }}" method="POST">
+            <div class="form-group">
+              <select class="form-control" name="addto">
+                <option value="Completed">Completed</option>
+                <option value="Watching" selected>Watching</option>
+                <option value="Planning">Planning</option>
+                <option value="Dropped">Dropped</option>
+              </select>
+              <button type="submit" class="btn btn-primary">Add</button>
+            </div>
+          </form>
+          <form action="{{url_for('removeWatched', id = m['id'], table = table)}}">
+              <button type="submit" class="btn btn-primary">Remove</button>
+          </form>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+  {% if table == 'planning' %}
+    <a href = "/{{curruser}}/completed">Completed</a>
+    <a href = "/{{curruser}}/watching">Watching</a>
+    <a href = "/{{curruser}}/paused">Paused</a>
+    <a href = "/{{curruser}}/dropped">Dropped</a>
+    <div class="grid-container">
+      {% for m in movies %}
+        <div class="grid-item">
+          <a href="{{url_for('description', id = m['id'], movie_object = dict(m), access = 'local')}}">
+            <img src="{{m['cover_url']}}" style="width:250px;height:375px;" alt="cover photo">
+          </a>
+          {% if 'movie' in m['kind'] %}
+            <div>{{m.title}} ({{m.release[7:11]}})</div>
+            <div>Duration: {{m.duration}} minutes</div>
+          {% else %}
+            {% if m['release'][-1] == '-' %}
+              <div>{{m['title']}} ({{m['release']}}Ongoing)</div>
+            {% else %}
+              <div>{{m['title']}} ({{m['release']}})</div>
+            {% endif %}
+            <div>Avg. Duration: {{m.duration}} minutes</div>
+          {% endif %}
+          <div>Genres: {{m.genres}}</div>
+          <form action="{{ url_for('addto', table = table, id = m['id']) }}" method="POST">
+            <div class="form-group">
+              Rate this:
+              <select class="form-control" name="user_rating">
+                <option value="0" selected>0</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+                <option value="6">6</option>
+                <option value="7">7</option>
+                <option value="8">8</option>
+                <option value="9">9</option>
+                <option value="10">10</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <select class="form-control" name="addto">
+                <option value="Completed">Completed</option>
+                <option value="Watching" selected>Watching</option>
+                <option value="Paused">Paused</option>
+                <option value="Dropped">Dropped</option>
+              </select>
+              <button type="submit" class="btn btn-primary">Add</button>
+            </div>
+          </form>
+          <form action="{{url_for('removeWatched', id = m['id'], table = table)}}">
+              <button type="submit" class="btn btn-primary">Remove</button>
+          </form>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+  {% if table == 'dropped' %}
+    <a href = "/{{curruser}}/completed">Completed</a>
+    <a href = "/{{curruser}}/watching">Watching</a>
+    <a href = "/{{curruser}}/paused">Paused</a>
+    <a href = "/{{curruser}}/planning">Planning</a>
+    <div class="grid-container">
+      {% for m in movies %}
+        <div class="grid-item">
+          <a href="{{url_for('description', id = m['id'], movie_object = dict(m), access = 'local')}}">
+            <img src="{{m['cover_url']}}" style="width:250px;height:375px;" alt="cover photo">
+          </a>
+          {% if 'movie' in m['kind'] %}
+            <div>{{m.title}} ({{m.release[7:11]}})</div>
+            <div>Duration: {{m.duration}} minutes</div>
+          {% else %}
+            {% if m['release'][-1] == '-' %}
+              <div>{{m['title']}} ({{m['release']}}Ongoing)</div>
+            {% else %}
+              <div>{{m['title']}} ({{m['release']}})</div>
+            {% endif %}
+            <div>Avg. Duration: {{m.duration}} minutes</div>
+          {% endif %}
+          <div>Your Rating: {{ratings[loop.index-1]}}/10</div>
+          <div>Genres: {{m.genres}}</div>
+          <form action="{{ url_for('addto', table = table, id = m['id']) }}" method="POST">
+            <div class="form-group">
+              <select class="form-control" name="addto">
+                <option value="Completed">Completed</option>
+                <option value="Watching">Watching</option>
+                <option value="Paused" selected>Paused</option>
+                <option value="Planning">Planning</option>
+              </select>
+              <button type="submit" class="btn btn-primary">Add</button>
+            </div>
+          </form>
+          <form action="{{url_for('removeWatched', id = m['id'], table = table)}}">
+              <button type="submit" class="btn btn-primary">Remove</button>
+          </form>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endblock %}
