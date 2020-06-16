@@ -28,7 +28,15 @@ db.execute('''CREATE TABLE IF NOT EXISTS movies (id INTEGER NOT NULL, kind VARCH
 # origin, status, next_episode
 db.execute('''CREATE TABLE IF NOT EXISTS series (id INTEGER NOT NULL, kind VARCHAR(20), title VARCHAR(64), release text,
             rating FLOAT, cast text, cast_id text, seasons INTEGER, episodes INTEGER, genres VARCHAR(100), duration INTEGER, summary text, cover_url text, PRIMARY KEY(id))''')
-db.execute('''CREATE TABLE IF NOT EXISTS watched (id INTEGER PRIMARY KEY AUTOINCREMENT, wid INTEGER NOT NULL, user_rating INTEGER,
+db.execute('''CREATE TABLE IF NOT EXISTS completed (id INTEGER PRIMARY KEY AUTOINCREMENT, wid INTEGER NOT NULL, user_rating INTEGER,
+            kind VARCHAR(20), date text, username VARCHAR(16) NOT NULL, FOREIGN KEY(username) REFERENCES users(username) ON DELETE CASCADE ON UPDATE CASCADE, FOREIGN KEY(wid) REFERENCES movies(id) ON DELETE CASCADE ON UPDATE CASCADE)''')
+db.execute('''CREATE TABLE IF NOT EXISTS watching (id INTEGER PRIMARY KEY AUTOINCREMENT, wid INTEGER NOT NULL, user_rating INTEGER,
+            kind VARCHAR(20), date text, username VARCHAR(16) NOT NULL, FOREIGN KEY(username) REFERENCES users(username) ON DELETE CASCADE ON UPDATE CASCADE, FOREIGN KEY(wid) REFERENCES movies(id) ON DELETE CASCADE ON UPDATE CASCADE)''')
+db.execute('''CREATE TABLE IF NOT EXISTS paused (id INTEGER PRIMARY KEY AUTOINCREMENT, wid INTEGER NOT NULL, user_rating INTEGER,
+            kind VARCHAR(20), date text, username VARCHAR(16) NOT NULL, FOREIGN KEY(username) REFERENCES users(username) ON DELETE CASCADE ON UPDATE CASCADE, FOREIGN KEY(wid) REFERENCES movies(id) ON DELETE CASCADE ON UPDATE CASCADE)''')
+db.execute('''CREATE TABLE IF NOT EXISTS planning (id INTEGER PRIMARY KEY AUTOINCREMENT, wid INTEGER NOT NULL, kind VARCHAR(20),
+            date text, username VARCHAR(16) NOT NULL, FOREIGN KEY(username) REFERENCES users(username) ON DELETE CASCADE ON UPDATE CASCADE, FOREIGN KEY(wid) REFERENCES movies(id) ON DELETE CASCADE ON UPDATE CASCADE)''')
+db.execute('''CREATE TABLE IF NOT EXISTS dropped (id INTEGER PRIMARY KEY AUTOINCREMENT, wid INTEGER NOT NULL, user_rating INTEGER,
             kind VARCHAR(20), date text, username VARCHAR(16) NOT NULL, FOREIGN KEY(username) REFERENCES users(username) ON DELETE CASCADE ON UPDATE CASCADE, FOREIGN KEY(wid) REFERENCES movies(id) ON DELETE CASCADE ON UPDATE CASCADE)''')
 db.commit()
 db.close()
