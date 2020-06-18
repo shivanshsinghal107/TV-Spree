@@ -19,4 +19,120 @@
     <br>
     <button type="submit" class="btn btn-primary">Search</button>
   </form>
+  <br>
+  <h3>Trending Movies Right Now</h3><br>
+  <div class="grid-container">
+    {% for m in mtrending %}
+      <div class="grid-item">
+        <a href="{{url_for('description', id = m['id'], movie_object = dict(m), access = 'local')}}">
+          <img src="{{m['cover_url']}}" style="width:250px;height:375px;" alt="cover photo">
+        </a>
+        <div>{{m.title}} ({{m.release[7:11]}})</div>
+      </div>
+    {% endfor %}
+  </div>
+  <br>
+  <h3>Trending TV Shows Right Now</h3><br>
+  <div class="grid-container">
+    {% for s in strending %}
+      <div class="grid-item">
+        <a href="{{url_for('description', id = s['id'], movie_object = dict(s), access = 'local')}}">
+          <img src="{{s['cover_url']}}" style="width:250px;height:375px;" alt="cover photo">
+        </a>
+        <div>{{s.title}} ({{s.release}})</div>
+      </div>
+    {% endfor %}
+  </div>
+  <br>
+  <h3>Movies Coming Soon</h3><br>
+  <div class="grid-container">
+    {% for m in mupcoming %}
+      <div class="grid-item">
+        <a href="{{url_for('description', id = m['id'], movie_object = dict(m), access = 'local')}}">
+          <img src="{{m['cover_url']}}" style="width:250px;height:375px;" alt="cover photo">
+        </a>
+        <div>{{m.title}} ({{m.release[7:11]}})</div>
+      </div>
+    {% endfor %}
+  </div>
+  <br>
+  <h3>Top Rated Movies</h3><br>
+  <div class="grid-container">
+    {% for m in mtoprated %}
+      <div class="grid-item">
+        <a href="{{url_for('description', id = m['id'], movie_object = dict(m), access = 'local')}}">
+          <img src="{{m['cover_url']}}" style="width:250px;height:375px;" alt="cover photo">
+        </a>
+        <div>{{m.title}} ({{m.release[7:11]}})</div>
+      </div>
+    {% endfor %}
+  </div>
+  <br>
+  <h3>Top Rated Series</h3><br>
+  <div class="grid-container">
+    {% for s in stoprated %}
+      <div class="grid-item">
+        <a href="{{url_for('description', id = s['id'], movie_object = dict(s), access = 'local')}}">
+          <img src="{{s['cover_url']}}" style="width:250px;height:375px;" alt="cover photo">
+        </a>
+        <div>{{s.title}} ({{s.release}})</div>
+      </div>
+    {% endfor %}
+  </div>
+  <br>
+  {% if mnetflix|length > 0 %}
+    <h3>Movies on Netflix</h3><br>
+    <div class="grid-container">
+      {% for m in mnetflix %}
+        <div class="grid-item">
+          <a href="{{url_for('description', id = m['id'], movie_object = dict(m), access = 'local')}}">
+            <img src="{{m['cover_url']}}" style="width:250px;height:375px;" alt="cover photo">
+          </a>
+          <div>{{m.title}} ({{m.release[7:11]}})</div>
+        </div>
+      {% endfor %}
+    </div>
+    <br>
+  {% endif %}
+  {% if snetflix|length > 0 %}
+    <h3>Series on Netflix</h3><br>
+    <div class="grid-container">
+      {% for s in snetflix %}
+        <div class="grid-item">
+          <a href="{{url_for('description', id = s['id'], movie_object = dict(s), access = 'local')}}">
+            <img src="{{s['cover_url']}}" style="width:250px;height:375px;" alt="cover photo">
+          </a>
+          <div>{{s.title}} ({{s.release}})</div>
+        </div>
+      {% endfor %}
+    </div>
+    <br>
+  {% endif %}
+  {% if mamazon|length > 0 %}
+    <h3>Movies on Amazon Prime Video</h3><br>
+    <div class="grid-container">
+      {% for m in mamazon %}
+        <div class="grid-item">
+          <a href="{{url_for('description', id = m['id'], movie_object = dict(m), access = 'local')}}">
+            <img src="{{m['cover_url']}}" style="width:250px;height:375px;" alt="cover photo">
+          </a>
+          <div>{{m.title}} ({{m.release[7:11]}})</div>
+        </div>
+      {% endfor %}
+    </div>
+    <br>
+  {% endif %}
+  {% if samazon|length > 0 %}
+    <h3>Series on Amazon Prime Video</h3><br>
+    <div class="grid-container">
+      {% for s in samazon %}
+        <div class="grid-item">
+          <a href="{{url_for('description', id = s['id'], movie_object = dict(s), access = 'local')}}">
+            <img src="{{s['cover_url']}}" style="width:250px;height:375px;" alt="cover photo">
+          </a>
+          <div>{{s.title}} ({{s.release}})</div>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
 {% endblock %}
