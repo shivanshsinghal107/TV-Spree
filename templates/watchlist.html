@@ -17,7 +17,7 @@
     <div class="grid-container">
       {% for m in movies %}
         <div class="grid-item">
-          <a href="{{url_for('description', id = m['id'], movie_object = dict(m), access = 'local')}}">
+          <a href="{{url_for('description', id = m['wid'], movie_object = dict(m), access = 'local')}}">
             <img src="{{m['cover_url']}}" style="width:250px;height:375px;" alt="cover photo">
           </a>
           {% if 'movie' in m['kind'] %}
@@ -33,7 +33,7 @@
           {% endif %}
           <div>Your Rating: {{ratings[loop.index-1]}}/10</div>
           <div>Genres: {{m.genres}}</div>
-          <form action="{{ url_for('addto', table = table, id = m['id']) }}" method="POST">
+          <form action="{{ url_for('addto', list = table, id = m['wid'], kind = m['kind']) }}" method="POST">
             <div class="form-group">
               <select class="form-control" name="addto">
                 <option value="Watching">Watching</option>
@@ -44,7 +44,7 @@
               <button type="submit" class="btn btn-primary">Add</button>
             </div>
           </form>
-          <form action="{{url_for('removeWatched', id = m['id'], table = table)}}">
+          <form action="{{url_for('removeWatched', id = m['wid'], kind = m['kind'], list = table)}}">
               <button type="submit" class="btn btn-primary">Remove</button>
           </form>
         </div>
@@ -59,7 +59,7 @@
     <div class="grid-container">
       {% for m in movies %}
         <div class="grid-item">
-          <a href="{{url_for('description', id = m['id'], movie_object = dict(m), access = 'local')}}">
+          <a href="{{url_for('description', id = m['wid'], movie_object = dict(m), access = 'local')}}">
             <img src="{{m['cover_url']}}" style="width:250px;height:375px;" alt="cover photo">
           </a>
           {% if 'movie' in m['kind'] %}
@@ -75,7 +75,7 @@
           {% endif %}
           <div>Your Rating: {{ratings[loop.index-1]}}/10</div>
           <div>Genres: {{m.genres}}</div>
-          <form action="{{ url_for('addto', table = table, id = m['id']) }}" method="POST">
+          <form action="{{ url_for('addto', list = table, id = m['wid'], kind = m['kind']) }}" method="POST">
             <div class="form-group">
               <select class="form-control" name="addto">
                 <option value="Completed" selected>Completed</option>
@@ -86,7 +86,7 @@
               <button type="submit" class="btn btn-primary">Add</button>
             </div>
           </form>
-          <form action="{{url_for('removeWatched', id = m['id'], table = table)}}">
+          <form action="{{url_for('removeWatched', id = m['wid'], kind = m['kind'], list = table)}}">
               <button type="submit" class="btn btn-primary">Remove</button>
           </form>
         </div>
@@ -101,7 +101,7 @@
     <div class="grid-container">
       {% for m in movies %}
         <div class="grid-item">
-          <a href="{{url_for('description', id = m['id'], movie_object = dict(m), access = 'local')}}">
+          <a href="{{url_for('description', id = m['wid'], movie_object = dict(m), access = 'local')}}">
             <img src="{{m['cover_url']}}" style="width:250px;height:375px;" alt="cover photo">
           </a>
           {% if 'movie' in m['kind'] %}
@@ -117,7 +117,7 @@
           {% endif %}
           <div>Your Rating: {{ratings[loop.index-1]}}/10</div>
           <div>Genres: {{m.genres}}</div>
-          <form action="{{ url_for('addto', table = table, id = m['id']) }}" method="POST">
+          <form action="{{ url_for('addto', list = table, id = m['wid'], kind = m['kind']) }}" method="POST">
             <div class="form-group">
               <select class="form-control" name="addto">
                 <option value="Completed">Completed</option>
@@ -128,7 +128,7 @@
               <button type="submit" class="btn btn-primary">Add</button>
             </div>
           </form>
-          <form action="{{url_for('removeWatched', id = m['id'], table = table)}}">
+          <form action="{{url_for('removeWatched', id = m['wid'], kind = m['kind'], list = table)}}">
               <button type="submit" class="btn btn-primary">Remove</button>
           </form>
         </div>
@@ -143,7 +143,7 @@
     <div class="grid-container">
       {% for m in movies %}
         <div class="grid-item">
-          <a href="{{url_for('description', id = m['id'], movie_object = dict(m), access = 'local')}}">
+          <a href="{{url_for('description', id = m['wid'], movie_object = dict(m), access = 'local')}}">
             <img src="{{m['cover_url']}}" style="width:250px;height:375px;" alt="cover photo">
           </a>
           {% if 'movie' in m['kind'] %}
@@ -158,7 +158,7 @@
             <div>Avg. Duration: {{m.duration}} minutes</div>
           {% endif %}
           <div>Genres: {{m.genres}}</div>
-          <form action="{{ url_for('addto', table = table, id = m['id']) }}" method="POST">
+          <form action="{{ url_for('addto', list = table, id = m['wid'], kind = m['kind']) }}" method="POST">
             <div class="form-group">
               Rate this:
               <select class="form-control" name="user_rating">
@@ -185,7 +185,7 @@
               <button type="submit" class="btn btn-primary">Add</button>
             </div>
           </form>
-          <form action="{{url_for('removeWatched', id = m['id'], table = table)}}">
+          <form action="{{url_for('removeWatched', id = m['wid'], kind = m['kind'], list = table)}}">
               <button type="submit" class="btn btn-primary">Remove</button>
           </form>
         </div>
@@ -200,7 +200,7 @@
     <div class="grid-container">
       {% for m in movies %}
         <div class="grid-item">
-          <a href="{{url_for('description', id = m['id'], movie_object = dict(m), access = 'local')}}">
+          <a href="{{url_for('description', id = m['wid'], movie_object = dict(m), access = 'local')}}">
             <img src="{{m['cover_url']}}" style="width:250px;height:375px;" alt="cover photo">
           </a>
           {% if 'movie' in m['kind'] %}
@@ -216,7 +216,7 @@
           {% endif %}
           <div>Your Rating: {{ratings[loop.index-1]}}/10</div>
           <div>Genres: {{m.genres}}</div>
-          <form action="{{ url_for('addto', table = table, id = m['id']) }}" method="POST">
+          <form action="{{ url_for('addto', list = table, id = m['wid'], kind = m['kind']) }}" method="POST">
             <div class="form-group">
               <select class="form-control" name="addto">
                 <option value="Completed">Completed</option>
@@ -227,7 +227,7 @@
               <button type="submit" class="btn btn-primary">Add</button>
             </div>
           </form>
-          <form action="{{url_for('removeWatched', id = m['id'], table = table)}}">
+          <form action="{{url_for('removeWatched', id = m['wid'], kind = m['kind'], list = table)}}">
               <button type="submit" class="btn btn-primary">Remove</button>
           </form>
         </div>
