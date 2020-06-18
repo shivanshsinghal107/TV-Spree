@@ -142,7 +142,7 @@
             {% else %}
               {% set rating = "NA" %}
             {% endif %}
-            <a href="{{url_for('description', id = movie.movieID, movie_object = {'id': movie.movieID, 'title': movie['title'], 'kind': movie['kind'], 'release': release, 'rating': rating, 'duration': duration, 'budget': budget, 'worldwide_gross': gross, 'genres': movie['genres'], 'cast':[n1, n2, n3, n4, n5], 'cast_id': [c1, c2, c3, c4, c5], 'roles': [r1, r2, r3, r4, r5], 'summary': plot, 'cover_url': movie['full-size cover url']}, access = a)}}">
+            <a href="{{url_for('description', id = movie.movieID, movie_object = {'wid': movie.movieID, 'title': movie['title'], 'kind': movie['kind'], 'release': release, 'rating': rating, 'duration': duration, 'budget': budget, 'worldwide_gross': gross, 'genres': movie['genres'], 'cast':[n1, n2, n3, n4, n5], 'cast_id': [c1, c2, c3, c4, c5], 'roles': [r1, r2, r3, r4, r5], 'summary': plot, 'cover_url': movie['full-size cover url']}, access = a)}}">
               <img src="{{movie['full-size cover url']}}" style="width:250px;height:375px" alt="cover photo">
             </a>
             {% if 'original air date' in movie.keys() %}
@@ -153,7 +153,7 @@
             <div>Rating: {{movie['rating']}}</div>
             <div>Duration: {{duration}} minutes</div>
             <div>Genres: {{movie['genres']}}</div>
-            <form action="{{url_for('add', id = movie.movieID, movie_object = {'id': movie.movieID, 'title': movie['title'], 'kind': movie['kind'], 'release': release, 'rating': rating, 'duration': duration, 'budget': budget, 'worldwide_gross': gross, 'genres': movie['genres'], 'cast_id': [c1, c2, c3, c4, c5], 'cast': [n1, n2, n3, n4, n5], 'roles': [r1, r2, r3, r4, r5], 'summary': plot, 'cover_url': movie['full-size cover url']}, access = a, query = query)}}" method="POST">
+            <form action="{{url_for('add', id = movie.movieID, movie_object = {'wid': movie.movieID, 'title': movie['title'], 'kind': movie['kind'], 'release': release, 'rating': rating, 'duration': duration, 'budget': budget, 'worldwide_gross': gross, 'genres': movie['genres'], 'cast_id': [c1, c2, c3, c4, c5], 'cast': [n1, n2, n3, n4, n5], 'roles': [r1, r2, r3, r4, r5], 'summary': plot, 'cover_url': movie['full-size cover url']}, access = a, query = query)}}" method="POST">
               <div class="form-group">
                 Rate this:
                 <select class="form-control" name="user_rating">
@@ -182,7 +182,7 @@
               </div>
             </form>
           {% else %}
-            <a href="{{url_for('description', id = movie['id'], movie_object = dict(movie), access = a)}}">
+            <a href="{{url_for('description', id = movie['wid'], movie_object = dict(movie), access = a)}}">
               <img src="{{movie['cover_url']}}" style="width:250px;height:375px;" alt="cover photo">
             </a>
             {% if movie['release'] != "" %}
@@ -193,7 +193,7 @@
             <div>Rating: {{movie['rating']}}</div>
             <div>Duration: {{movie['duration']}} minutes</div>
             <div>Genres: {{movie['genres']}}</div>
-            <form action="{{url_for('add', id = movie['id'], movie_object = dict(movie), access = a, query = query)}}" method="POST">
+            <form action="{{url_for('add', id = movie['wid'], movie_object = dict(movie), access = a, query = query)}}" method="POST">
               <div class="form-group">
                 Rate this:
                 <select class="form-control" name="user_rating">
@@ -331,7 +331,7 @@
             {% else %}
               {% set years = "" %}
             {% endif %}
-            <a href="{{url_for('description', id = movie.movieID, movie_object = {'id': movie.movieID, 'title': movie['title'], 'kind': movie['kind'], 'release': years, 'rating': rating, 'duration': duration, 'genres': movie['genres'], 'seasons': movie['number of seasons'], 'episodes': movie['number of episodes'], 'cast':[n1, n2, n3, n4, n5], 'cast_id': [c1, c2, c3, c4, c5], 'roles': [r1, r2, r3, r4, r5], 'summary': plot, 'cover_url': movie['full-size cover url']}, access = a)}}">
+            <a href="{{url_for('description', id = movie.movieID, movie_object = {'wid': movie.movieID, 'title': movie['title'], 'kind': movie['kind'], 'release': years, 'rating': rating, 'duration': duration, 'genres': movie['genres'], 'seasons': movie['number of seasons'], 'episodes': movie['number of episodes'], 'cast':[n1, n2, n3, n4, n5], 'cast_id': [c1, c2, c3, c4, c5], 'roles': [r1, r2, r3, r4, r5], 'summary': plot, 'cover_url': movie['full-size cover url']}, access = a)}}">
               <img src="{{movie['full-size cover url']}}" style="width:250px;height:375px;" alt="cover photo">
             </a>
             {% if years[-1] == '-' %}
@@ -342,7 +342,7 @@
             <div>Seasons: {{movie['number of seasons']}}</div>
             <div>Rating: {{movie['rating']}}</div>
             <div>Genres: {{movie['genres']}}</div>
-            <form action="{{url_for('add', id = movie.movieID, movie_object = {'id': movie.movieID, 'title': movie['title'], 'kind': movie['kind'], 'release': movie['series years'], 'rating': rating, 'duration': duration, 'genres': movie['genres'], 'seasons': movie['number of seasons'], 'episodes': movie['number of episodes'], 'cast_id': [c1, c2, c3, c4, c5], 'cast': [n1, n2, n3, n4, n5], 'roles': [r1, r2, r3, r4, r5], 'summary': plot, 'cover_url': movie['full-size cover url']}, access = a, query = query)}}" method="POST">
+            <form action="{{url_for('add', id = movie.movieID, movie_object = {'wid': movie.movieID, 'title': movie['title'], 'kind': movie['kind'], 'release': movie['series years'], 'rating': rating, 'duration': duration, 'genres': movie['genres'], 'seasons': movie['number of seasons'], 'episodes': movie['number of episodes'], 'cast_id': [c1, c2, c3, c4, c5], 'cast': [n1, n2, n3, n4, n5], 'roles': [r1, r2, r3, r4, r5], 'summary': plot, 'cover_url': movie['full-size cover url']}, access = a, query = query)}}" method="POST">
               <div class="form-group">
                 Rate this:
                 <select class="form-control" name="user_rating">
@@ -371,7 +371,7 @@
               </div>
             </form>
           {% else %}
-            <a href="{{url_for('description', id = movie['id'], movie_object = dict(movie), access = a)}}">
+            <a href="{{url_for('description', id = movie['wid'], movie_object = dict(movie), access = a)}}">
               <img src="{{movie['cover_url']}}" style="width:250px;height:375px;" alt="cover photo">
             </a>
             {% if movie['release'][-1] == '-' %}
@@ -382,7 +382,7 @@
             <div>Season: {{movie['seasons']}}</div>
             <div>Rating: {{movie['rating']}}</div>
             <div>Genres: {{movie['genres']}}</div>
-            <form action="{{url_for('add', id = movie['id'], movie_object = dict(movie), access = a, query = query)}}" method="POST">
+            <form action="{{url_for('add', id = movie['wid'], movie_object = dict(movie), access = a, query = query)}}" method="POST">
               <div class="form-group">
                 Rate this:
                 <select class="form-control" name="user_rating">
