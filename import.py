@@ -45,7 +45,12 @@ ia = imdb.IMDb()
 def fetch_movies(ids, tag):
     count = 1
     for id in ids:
+        if id[0] == 0:
+            id = id[1:]
         m = ia.get_movie(id)
+        kind = "NA"
+        if 'kind' in m.keys():
+            kind = m['kind']
         plot = ""
         if 'plot outline' in m.keys():
             plot = m['plot outline']
@@ -80,13 +85,14 @@ def fetch_movies(ids, tag):
         genres = genres[:-2]
         cast = ""
         cast_id = ""
-        for c in m['cast'][:5]:
-            cast += c['name'] + f"({c.currentRole}), "
-            cast_id += f"{c.personID}, "
-        cast = cast[:-2]
-        cast_id = cast_id[:-2]
+        if 'cast' in m.keys():
+            for c in m['cast'][:5]:
+                cast += c['name'] + f"({c.currentRole}), "
+                cast_id += f"{c.personID}, "
+            cast = cast[:-2]
+            cast_id = cast_id[:-2]
 
-        db.execute("INSERT INTO movies (wid, tag, kind, title, release, rating, cast, cast_id, genres, duration, budget, worldwide_gross, summary, cover_url) VALUES (:wid, :tag, :kind, :title, :release, :rating, :cast, :cast_id, :genres, :duration, :budget, :worldwide_gross, :summary, :cover_url)", {"wid": id, "tag": tag, "kind": m['kind'], "title": m['title'], "release": release, "rating": rating, "cast": cast, "cast_id": cast_id, "genres": genres, "duration": duration, "budget": budget, "worldwide_gross": gross, "summary": plot, "cover_url": cover_url})
+        db.execute("INSERT INTO movies (wid, tag, kind, title, release, rating, cast, cast_id, genres, duration, budget, worldwide_gross, summary, cover_url) VALUES (:wid, :tag, :kind, :title, :release, :rating, :cast, :cast_id, :genres, :duration, :budget, :worldwide_gross, :summary, :cover_url)", {"wid": id, "tag": tag, "kind": kind, "title": m['title'], "release": release, "rating": rating, "cast": cast, "cast_id": cast_id, "genres": genres, "duration": duration, "budget": budget, "worldwide_gross": gross, "summary": plot, "cover_url": cover_url})
         db.commit()
         print(f"{count}. {m['title']} inserted")
         count += 1
@@ -94,7 +100,12 @@ def fetch_movies(ids, tag):
 def fetch_series(ids, tag):
     count = 1
     for id in ids:
+        if id[0] == 0:
+            id = id[1:]
         m = ia.get_movie(id)
+        kind = "NA"
+        if 'kind' in m.keys():
+            kind = m['kind']
         ia.update(m, 'episodes')
         plot = ""
         if 'plot outline' in m.keys():
@@ -138,13 +149,14 @@ def fetch_series(ids, tag):
             genres = "NA"
         cast = ""
         cast_id = ""
-        for c in m['cast'][:5]:
-            cast += c['name'] + f"({c.currentRole}), "
-            cast_id += f"{c.personID}, "
-        cast = cast[:-2]
-        cast_id = cast_id[:-2]
+        if 'cast' in m.keys():
+            for c in m['cast'][:5]:
+                cast += c['name'] + f"({c.currentRole}), "
+                cast_id += f"{c.personID}, "
+            cast = cast[:-2]
+            cast_id = cast_id[:-2]
 
-        db.execute("INSERT INTO series (wid, tag, kind, title, release, rating, cast, cast_id, seasons, episodes, genres, duration,  summary, cover_url) VALUES (:wid, :tag, :kind, :title, :release, :rating, :cast, :cast_id, :seasons, :episodes, :genres, :duration,  :summary, :cover_url)", {"wid": id, "tag": tag, "kind": m['kind'], "title": m['title'], "release": release, "rating": rating, "cast": cast, "cast_id": cast_id, "seasons": seasons, "episodes": episodes, "genres": genres, "duration": duration, "summary": plot, "cover_url": cover_url})
+        db.execute("INSERT INTO series (wid, tag, kind, title, release, rating, cast, cast_id, seasons, episodes, genres, duration,  summary, cover_url) VALUES (:wid, :tag, :kind, :title, :release, :rating, :cast, :cast_id, :seasons, :episodes, :genres, :duration,  :summary, :cover_url)", {"wid": id, "tag": tag, "kind": kind, "title": m['title'], "release": release, "rating": rating, "cast": cast, "cast_id": cast_id, "seasons": seasons, "episodes": episodes, "genres": genres, "duration": duration, "summary": plot, "cover_url": cover_url})
         db.commit()
         print(f"{count}. {m['title']} inserted")
         count += 1
@@ -157,7 +169,7 @@ def trending_movies():
     table = soup.find("table")
     data = table.find_all("td", {"class": "posterColumn"})
     ids = []
-    for d in data[:4]:
+    for d in data[:10]:
         i = d.find("a")['href'].split("tt")[1]
         ids.append(i[:-1])
 
@@ -172,7 +184,7 @@ def trending_series():
     table = soup.find("table")
     data = table.find_all("td", {"class": "posterColumn"})
     ids = []
-    for d in data[:4]:
+    for d in data[:10]:
         i = d.find("a")['href'].split("tt")[1]
         ids.append(i[:-1])
 
@@ -192,10 +204,16 @@ def movies_coming_soon():
         soup = BeautifulSoup(res.text, "html.parser")
         div = soup.find("div", {"class": "list detail"})
         tables = div.find_all("table")
-        for table in tables[:2]:
-            h = table.find("h4")
-            a = h.find("a")['href'].split("tt")[1]
-            ids.append(a[:-1])
+        if len(tables) > 5:
+            for table in tables[:5]:
+                h = table.find("h4")
+                a = h.find("a")['href'].split("tt")[1]
+                ids.append(a[:-1])
+        else:
+            for table in tables:
+                h = table.find("h4")
+                a = h.find("a")['href'].split("tt")[1]
+                ids.append(a[:-1])
 
     print("Movies IDs fetching done")
     fetch_movies(ids, 'upcoming')
@@ -203,8 +221,13 @@ def movies_coming_soon():
 def fetch_streaming_platforms(ids, tag):
     count = 1
     for id in ids:
+        if id[0] == 0:
+            id = id[1:]
         m = ia.get_movie(id)
-        if 'series' in m['kind']:
+        kind = "NA"
+        if 'kind' in m.keys():
+            kind = m['kind']
+        if 'series' in kind:
             ia.update(m, 'episodes')
             plot = ""
             if 'plot outline' in m.keys():
@@ -248,13 +271,14 @@ def fetch_streaming_platforms(ids, tag):
                 genres = "NA"
             cast = ""
             cast_id = ""
-            for c in m['cast'][:5]:
-                cast += c['name'] + f"({c.currentRole}), "
-                cast_id += f"{c.personID}, "
-            cast = cast[:-2]
-            cast_id = cast_id[:-2]
+            if 'cast' in m.keys():
+                for c in m['cast'][:5]:
+                    cast += c['name'] + f"({c.currentRole}), "
+                    cast_id += f"{c.personID}, "
+                cast = cast[:-2]
+                cast_id = cast_id[:-2]
 
-            db.execute("INSERT INTO series (wid, tag, kind, title, release, rating, cast, cast_id, seasons, episodes, genres, duration,  summary, cover_url) VALUES (:wid, :tag, :kind, :title, :release, :rating, :cast, :cast_id, :seasons, :episodes, :genres, :duration,  :summary, :cover_url)", {"wid": id, "tag": tag, "kind": m['kind'], "title": m['title'], "release": release, "rating": rating, "cast": cast, "cast_id": cast_id, "seasons": seasons, "episodes": episodes, "genres": genres, "duration": duration, "summary": plot, "cover_url": cover_url})
+            db.execute("INSERT INTO series (wid, tag, kind, title, release, rating, cast, cast_id, seasons, episodes, genres, duration,  summary, cover_url) VALUES (:wid, :tag, :kind, :title, :release, :rating, :cast, :cast_id, :seasons, :episodes, :genres, :duration,  :summary, :cover_url)", {"wid": id, "tag": tag, "kind": kind, "title": m['title'], "release": release, "rating": rating, "cast": cast, "cast_id": cast_id, "seasons": seasons, "episodes": episodes, "genres": genres, "duration": duration, "summary": plot, "cover_url": cover_url})
             db.commit()
         else:
             plot = ""
@@ -291,13 +315,14 @@ def fetch_streaming_platforms(ids, tag):
             genres = genres[:-2]
             cast = ""
             cast_id = ""
-            for c in m['cast'][:5]:
-                cast += c['name'] + f"({c.currentRole}), "
-                cast_id += f"{c.personID}, "
-            cast = cast[:-2]
-            cast_id = cast_id[:-2]
+            if 'cast' in m.keys():
+                for c in m['cast'][:5]:
+                    cast += c['name'] + f"({c.currentRole}), "
+                    cast_id += f"{c.personID}, "
+                cast = cast[:-2]
+                cast_id = cast_id[:-2]
 
-            db.execute("INSERT INTO movies (wid, tag, kind, title, release, rating, cast, cast_id, genres, duration, budget, worldwide_gross, summary, cover_url) VALUES (:wid, :tag, :kind, :title, :release, :rating, :cast, :cast_id, :genres, :duration, :budget, :worldwide_gross, :summary, :cover_url)", {"wid": id, "tag": tag, "kind": m['kind'], "title": m['title'], "release": release, "rating": rating, "cast": cast, "cast_id": cast_id, "genres": genres, "duration": duration, "budget": budget, "worldwide_gross": gross, "summary": plot, "cover_url": cover_url})
+            db.execute("INSERT INTO movies (wid, tag, kind, title, release, rating, cast, cast_id, genres, duration, budget, worldwide_gross, summary, cover_url) VALUES (:wid, :tag, :kind, :title, :release, :rating, :cast, :cast_id, :genres, :duration, :budget, :worldwide_gross, :summary, :cover_url)", {"wid": id, "tag": tag, "kind": kind, "title": m['title'], "release": release, "rating": rating, "cast": cast, "cast_id": cast_id, "genres": genres, "duration": duration, "budget": budget, "worldwide_gross": gross, "summary": plot, "cover_url": cover_url})
             db.commit()
         print(f"{count}. {m['title']} inserted")
         count += 1
@@ -309,8 +334,8 @@ def upcoming_on_netflix():
     soup = BeautifulSoup(res.text, "html.parser")
     heads = soup.find_all("h3", {"class": "lister-item-header"})
     ids = []
-    if len(heads) > 8:
-        for h in heads[:8]:
+    if len(heads) > 10:
+        for h in heads[:10]:
             i = h.find("a")['href'].split("tt")[1]
             ids.append(i[:-1])
     else:
@@ -328,8 +353,8 @@ def upcoming_on_amazon():
     soup = BeautifulSoup(res.text, "html.parser")
     heads = soup.find_all("h3", {"class": "lister-item-header"})
     ids = []
-    if len(heads) > 8:
-        for h in heads[:8]:
+    if len(heads) > 10:
+        for h in heads[:10]:
             i = h.find("a")['href'].split("tt")[1]
             ids.append(i[:-1])
     else:
@@ -345,7 +370,7 @@ def top_movies():
     print("Fetching top rated movies")
     top250 = ia.get_top250_movies()
     ids = []
-    for t in top250[:4]:
+    for t in top250[:10]:
         ids.append(t.movieID)
 
     print("Movies IDs fetching done")
@@ -359,7 +384,7 @@ def top_series():
     table = soup.find("table")
     data = table.find_all("td", {"class": "posterColumn"})
     ids = []
-    for d in data[:4]:
+    for d in data[:10]:
         i = d.find("a")['href'].split("tt")[1]
         ids.append(i[:-1])
 
