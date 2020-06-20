@@ -3,7 +3,12 @@ import ast
 import os, datetime
 import numpy as np
 import pandas as pd
+# these below two lines are for avoiding a runtime error
+import matplotlib
+matplotlib.use('Agg')
+
 import matplotlib.pyplot as plt
+from matplotlib.colors import LogNorm
 from collections import Counter, OrderedDict
 from base64 import b64encode
 from io import BytesIO
@@ -34,16 +39,22 @@ def index():
     mupcoming = db.execute("SELECT * FROM movies WHERE tag = :tag ORDER BY id", {"tag": "upcoming"}).fetchall()
     mtoprated = db.execute("SELECT * FROM movies WHERE tag = :tag ORDER BY id", {"tag": "top_rated"}).fetchall()
     stoprated = db.execute("SELECT * FROM series WHERE tag = :tag ORDER BY id", {"tag": "top_rated"}).fetchall()
-    mnetflix = db.execute("SELECT * FROM movies WHERE tag = :tag ORDER BY id", {"tag": "netflix"}).fetchall()
-    snetflix = db.execute("SELECT * FROM series WHERE tag = :tag ORDER BY id", {"tag": "netflix"}).fetchall()
-    mamazon = db.execute("SELECT * FROM movies WHERE tag = :tag ORDER BY id", {"tag": "amazon"}).fetchall()
-    samazon = db.execute("SELECT * FROM series WHERE tag = :tag ORDER BY id", {"tag": "amazon"}).fetchall()
+    netflix = []
+    for m in db.execute("SELECT * FROM movies WHERE tag = :tag ORDER BY id", {"tag": "netflix"}).fetchall():
+        netflix.append(m)
+    for s in db.execute("SELECT * FROM series WHERE tag = :tag ORDER BY id", {"tag": "netflix"}).fetchall():
+        netflix.append(s)
+    amazon = []
+    for m in db.execute("SELECT * FROM movies WHERE tag = :tag ORDER BY id", {"tag": "amazon"}).fetchall():
+        amazon.append(m)
+    for s in db.execute("SELECT * FROM series WHERE tag = :tag ORDER BY id", {"tag": "amazon"}).fetchall():
+        amazon.append(s)
     db.close()
     if session.get("logged_in"):
         curruser = session["username"]
-        return render_template("index.html", loginstatus = 'True', curruser = curruser, mtrending = mtrending, strending = strending, mupcoming = mupcoming, mtoprated = mtoprated, stoprated = stoprated, mnetflix = mnetflix, snetflix = snetflix, mamazon = mamazon, samazon = samazon)
+        return render_template("index.html", loginstatus = 'True', curruser = curruser, mtrending = mtrending, strending = strending, mupcoming = mupcoming, mtoprated = mtoprated, stoprated = stoprated, netflix = netflix, amazon = amazon)
     else:
-        return render_template("index.html", loginstatus = 'False', mtrending = mtrending, strending = strending, mupcoming = mupcoming, mtoprated = mtoprated, stoprated = stoprated, mnetflix = mnetflix, snetflix = snetflix, mamazon = mamazon, samazon = samazon)
+        return render_template("index.html", loginstatus = 'False', mtrending = mtrending, strending = strending, mupcoming = mupcoming, mtoprated = mtoprated, stoprated = stoprated, netflix = netflix, amazon = amazon)
 
 @app.route("/register", methods = ['GET', 'POST'])
 def register():
@@ -340,11 +351,15 @@ def profile(username):
         series = []
         genres = []
         hours = 0
+        matrix = np.zeros([1, 60], dtype = int)
+        dates = []
         for list in lists:
             for m in (db.execute(f"SELECT * FROM mwatched WHERE list = :list", {"list": list}).fetchall()):
                 movies.append(m)
+                dates.append(int(m.date[8:10]))
             for s in (db.execute("SELECT * FROM swatched WHERE list = :list", {"list": list}).fetchall()):
                 series.append(s)
+                dates.append(int(s.date[8:10]))
         for m in movies:
             data = db.execute("SELECT * FROM movies WHERE wid = :wid", {"wid": m.wid}).fetchall()[0]
             if data.duration != 'NA':
@@ -376,9 +391,27 @@ def profile(username):
         fig.savefig(img, format = 'png', bbox_inches = 'tight')
         img.seek(0)
         encoded = b64encode(img.getvalue())
+
+        d = dict(Counter(dates))
+        sorted_days = sorted(d.items(), key = lambda x: x[1])
+        days = dict(sorted_days)
+        for day in days.keys():
+            matrix[0][day] = days[day]
+        W = matrix.reshape(3, 20)
+        #Z = np.random.randn(3, 20)
+        fig1 = plt.figure(figsize = (11, 2))
+        plt.pcolormesh(W, edgecolors='w', linewidths=5, cmap ='Greens')
+        plt.xticks([])
+        plt.yticks([])
+        plt.box(False)
+        img1 = BytesIO()
+        fig1.savefig(img1, format = 'png', bbox_inches = 'tight')
+        img.seek(0)
+        encoded1 = b64encode(img1.getvalue())
+
         hours /= 60
         days = round(hours/24)
         db.close()
-        return render_template("profile.html", curruser = session["username"], movies = len(movies), series = len(series), hours = round(hours), days = days, img_data = encoded.decode('utf-8'))
+        return render_template("profile.html", curruser = session["username"], movies = len(movies), series = len(series), hours = round(hours), days = days, img_data = encoded.decode('utf-8'), img1_data = encoded1.decode('utf-8'))
     else:
         return "<script>alert('Please login first'); window.location = 'http://127.0.0.1:5000/login';</script>"
