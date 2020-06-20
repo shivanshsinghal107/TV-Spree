@@ -20,119 +20,180 @@
     <button type="submit" class="btn btn-primary">Search</button>
   </form>
   <br>
-  <h3>Trending Movies Right Now</h3><br>
-  <div class="grid-container">
-    {% for m in mtrending %}
-      <div class="grid-item">
-        <a href="{{url_for('description', id = m['id'], movie_object = dict(m), access = 'local')}}">
-          <img src="{{m['cover_url']}}" style="width:250px;height:375px;" alt="cover photo">
-        </a>
-        <div>{{m.title}} ({{m.release[7:11]}})</div>
-      </div>
-    {% endfor %}
-  </div>
-  <br>
-  <h3>Trending TV Shows Right Now</h3><br>
-  <div class="grid-container">
-    {% for s in strending %}
-      <div class="grid-item">
-        <a href="{{url_for('description', id = s['id'], movie_object = dict(s), access = 'local')}}">
-          <img src="{{s['cover_url']}}" style="width:250px;height:375px;" alt="cover photo">
-        </a>
-        <div>{{s.title}} ({{s.release}})</div>
-      </div>
-    {% endfor %}
-  </div>
-  <br>
-  <h3>Movies Coming Soon</h3><br>
-  <div class="grid-container">
-    {% for m in mupcoming %}
-      <div class="grid-item">
-        <a href="{{url_for('description', id = m['id'], movie_object = dict(m), access = 'local')}}">
-          <img src="{{m['cover_url']}}" style="width:250px;height:375px;" alt="cover photo">
-        </a>
-        <div>{{m.title}} ({{m.release[7:11]}})</div>
-      </div>
-    {% endfor %}
-  </div>
-  <br>
-  <h3>Top Rated Movies</h3><br>
-  <div class="grid-container">
-    {% for m in mtoprated %}
-      <div class="grid-item">
-        <a href="{{url_for('description', id = m['id'], movie_object = dict(m), access = 'local')}}">
-          <img src="{{m['cover_url']}}" style="width:250px;height:375px;" alt="cover photo">
-        </a>
-        <div>{{m.title}} ({{m.release[7:11]}})</div>
-      </div>
-    {% endfor %}
-  </div>
-  <br>
-  <h3>Top Rated Series</h3><br>
-  <div class="grid-container">
-    {% for s in stoprated %}
-      <div class="grid-item">
-        <a href="{{url_for('description', id = s['id'], movie_object = dict(s), access = 'local')}}">
-          <img src="{{s['cover_url']}}" style="width:250px;height:375px;" alt="cover photo">
-        </a>
-        <div>{{s.title}} ({{s.release}})</div>
-      </div>
-    {% endfor %}
-  </div>
-  <br>
-  {% if mnetflix|length > 0 %}
-    <h3>Movies on Netflix</h3><br>
-    <div class="grid-container">
-      {% for m in mnetflix %}
-        <div class="grid-item">
-          <a href="{{url_for('description', id = m['id'], movie_object = dict(m), access = 'local')}}">
-            <img src="{{m['cover_url']}}" style="width:250px;height:375px;" alt="cover photo">
-          </a>
-          <div>{{m.title}} ({{m.release[7:11]}})</div>
+  <div class="container text-center my-3">
+    <h2>Trending Movies</h2><br>
+    <div class="row mx-auto my-auto">
+      <div id="mtrending" class="carousel slide w-100" data-ride="carousel">
+        <div class="carousel-inner" role="listbox">
+          {% for m in mtrending %}
+            <div class="carousel-item{% if loop.index == 1 %} active{% endif %}">
+              <a href="{{url_for('description', id = m['wid'], movie_object = dict(m), access = 'local')}}">
+                <img class="img-fluid" src="{{m['cover_url']}}" style="width:350px;height:400px;" alt="cover photo">
+              </a>
+            </div>
+          {% endfor %}
         </div>
-      {% endfor %}
+        <a class="carousel-control-prev w-auto" href="#mtrending" role="button" data-slide="prev">
+          <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+          <span class="sr-only">Previous</span>
+        </a>
+        <a class="carousel-control-next w-auto" href="#mtrending" role="button" data-slide="next">
+          <span class="carousel-control-next-icon" aria-hidden="true"></span>
+          <span class="sr-only">Next</span>
+        </a>
+      </div>
     </div>
-    <br>
-  {% endif %}
-  {% if snetflix|length > 0 %}
-    <h3>Series on Netflix</h3><br>
-    <div class="grid-container">
-      {% for s in snetflix %}
-        <div class="grid-item">
-          <a href="{{url_for('description', id = s['id'], movie_object = dict(s), access = 'local')}}">
-            <img src="{{s['cover_url']}}" style="width:250px;height:375px;" alt="cover photo">
-          </a>
-          <div>{{s.title}} ({{s.release}})</div>
+  </div>
+  <br>
+  <div class="container text-center my-3">
+    <h2>Trending TV Shows</h2><br>
+    <div class="row mx-auto my-auto">
+      <div id="strending" class="carousel slide w-100" data-ride="carousel">
+        <div class="carousel-inner" role="listbox">
+          {% for s in strending %}
+            <div class="carousel-item{% if loop.index == 1 %} active{% endif %}">
+              <a href="{{url_for('description', id = s['wid'], movie_object = dict(s), access = 'local')}}">
+                <img class="img-fluid" src="{{s['cover_url']}}" style="width:350px;height:400px;" alt="cover photo">
+              </a>
+            </div>
+          {% endfor %}
         </div>
-      {% endfor %}
+        <a class="carousel-control-prev w-auto" href="#strending" role="button" data-slide="prev">
+          <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+          <span class="sr-only">Previous</span>
+        </a>
+        <a class="carousel-control-next w-auto" href="#strending" role="button" data-slide="next">
+          <span class="carousel-control-next-icon" aria-hidden="true"></span>
+          <span class="sr-only">Next</span>
+        </a>
+      </div>
     </div>
-    <br>
-  {% endif %}
-  {% if mamazon|length > 0 %}
-    <h3>Movies on Amazon Prime Video</h3><br>
-    <div class="grid-container">
-      {% for m in mamazon %}
-        <div class="grid-item">
-          <a href="{{url_for('description', id = m['id'], movie_object = dict(m), access = 'local')}}">
-            <img src="{{m['cover_url']}}" style="width:250px;height:375px;" alt="cover photo">
-          </a>
-          <div>{{m.title}} ({{m.release[7:11]}})</div>
+  </div>
+  <br>
+  <div class="container text-center my-3">
+    <h2>Movies Coming Soon in Theatres</h2><br>
+    <div class="row mx-auto my-auto">
+      <div id="mupcoming" class="carousel slide w-100" data-ride="carousel">
+        <div class="carousel-inner" role="listbox">
+          {% for m in mupcoming %}
+            {% if m['cover_url'] != "" %}
+              <div class="carousel-item{% if loop.index == 1 %} active{% endif %}">
+                <a href="{{url_for('description', id = m['wid'], movie_object = dict(m), access = 'local')}}">
+                  <img class="img-fluid" src="{{m['cover_url']}}" style="width:350px;height:400px;" alt="cover photo">
+                </a>
+              </div>
+            {% endif %}
+          {% endfor %}
         </div>
-      {% endfor %}
+        <a class="carousel-control-prev w-auto" href="#mupcoming" role="button" data-slide="prev">
+          <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+          <span class="sr-only">Previous</span>
+        </a>
+        <a class="carousel-control-next w-auto" href="#mupcoming" role="button" data-slide="next">
+          <span class="carousel-control-next-icon" aria-hidden="true"></span>
+          <span class="sr-only">Next</span>
+        </a>
+      </div>
     </div>
-    <br>
-  {% endif %}
-  {% if samazon|length > 0 %}
-    <h3>Series on Amazon Prime Video</h3><br>
-    <div class="grid-container">
-      {% for s in samazon %}
-        <div class="grid-item">
-          <a href="{{url_for('description', id = s['id'], movie_object = dict(s), access = 'local')}}">
-            <img src="{{s['cover_url']}}" style="width:250px;height:375px;" alt="cover photo">
-          </a>
-          <div>{{s.title}} ({{s.release}})</div>
+  </div>
+  <br>
+  <div class="container text-center my-3">
+    <h2>Top Rated Movies</h2><br>
+    <div class="row mx-auto my-auto">
+      <div id="mtoprated" class="carousel slide w-100" data-ride="carousel">
+        <div class="carousel-inner" role="listbox">
+          {% for m in mtoprated %}
+            <div class="carousel-item{% if loop.index == 1 %} active{% endif %}">
+              <a href="{{url_for('description', id = m['wid'], movie_object = dict(m), access = 'local')}}">
+                <img class="img-fluid" src="{{m['cover_url']}}" style="width:350px;height:400px;" alt="cover photo">
+              </a>
+            </div>
+          {% endfor %}
         </div>
-      {% endfor %}
+        <a class="carousel-control-prev w-auto" href="#mtoprated" role="button" data-slide="prev">
+          <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+          <span class="sr-only">Previous</span>
+        </a>
+        <a class="carousel-control-next w-auto" href="#mtoprated" role="button" data-slide="next">
+          <span class="carousel-control-next-icon" aria-hidden="true"></span>
+          <span class="sr-only">Next</span>
+        </a>
+      </div>
     </div>
-  {% endif %}
+  </div>
+  <br>
+  <div class="container text-center my-3">
+    <h2>Top Rated TV Shows</h2><br>
+    <div class="row mx-auto my-auto">
+      <div id="stoprated" class="carousel slide w-100" data-ride="carousel">
+        <div class="carousel-inner" role="listbox">
+          {% for s in stoprated %}
+            <div class="carousel-item{% if loop.index == 1 %} active{% endif %}">
+              <a href="{{url_for('description', id = s['wid'], movie_object = dict(s), access = 'local')}}">
+                <img class="img-fluid" src="{{s['cover_url']}}" style="width:350px;height:400px;" alt="cover photo">
+              </a>
+            </div>
+          {% endfor %}
+        </div>
+        <a class="carousel-control-prev w-auto" href="#stoprated" role="button" data-slide="prev">
+          <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+          <span class="sr-only">Previous</span>
+        </a>
+        <a class="carousel-control-next w-auto" href="#stoprated" role="button" data-slide="next">
+          <span class="carousel-control-next-icon" aria-hidden="true"></span>
+          <span class="sr-only">Next</span>
+        </a>
+      </div>
+    </div>
+  </div>
+  <br>
+  <div class="container text-center my-3">
+    <h2>Netflix Originals</h2><br>
+    <div class="row mx-auto my-auto">
+      <div id="netflix" class="carousel slide w-100" data-ride="carousel">
+        <div class="carousel-inner" role="listbox">
+          {% for n in netflix %}
+            <div class="carousel-item{% if loop.index == 1 %} active{% endif %}">
+              <a href="{{url_for('description', id = n['wid'], movie_object = dict(n), access = 'local')}}">
+                <img class="img-fluid" src="{{n['cover_url']}}" style="width:350px;height:400px;" alt="cover photo">
+              </a>
+            </div>
+          {% endfor %}
+        </div>
+        <a class="carousel-control-prev w-auto" href="#netflix" role="button" data-slide="prev">
+          <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+          <span class="sr-only">Previous</span>
+        </a>
+        <a class="carousel-control-next w-auto" href="#netflix" role="button" data-slide="next">
+          <span class="carousel-control-next-icon" aria-hidden="true"></span>
+          <span class="sr-only">Next</span>
+        </a>
+      </div>
+    </div>
+  </div>
+  <br>
+  <div class="container text-center my-3">
+    <h2>Amazon Prime Video Originals</h2><br>
+    <div class="row mx-auto my-auto">
+      <div id="amazon" class="carousel slide w-100" data-ride="carousel">
+        <div class="carousel-inner" role="listbox">
+          {% for a in amazon %}
+            <div class="carousel-item{% if loop.index == 1 %} active{% endif %}">
+              <a href="{{url_for('description', id = a['wid'], movie_object = dict(a), access = 'local')}}">
+                <img class="img-fluid" src="{{a['cover_url']}}" style="width:350px;height:400px;" alt="cover photo">
+              </a>
+            </div>
+          {% endfor %}
+        </div>
+        <a class="carousel-control-prev w-auto" href="#amazon" role="button" data-slide="prev">
+          <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+          <span class="sr-only">Previous</span>
+        </a>
+        <a class="carousel-control-next w-auto" href="#amazon" role="button" data-slide="next">
+          <span class="carousel-control-next-icon" aria-hidden="true"></span>
+          <span class="sr-only">Next</span>
+        </a>
+      </div>
+    </div>
+  </div>
 {% endblock %}
