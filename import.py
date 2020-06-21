@@ -1,4 +1,5 @@
 import os
+import csv
 import imdb
 import requests
 import datetime
@@ -80,9 +81,12 @@ def fetch_movies(ids, tag):
         elif 'cover url' in m.keys():
             cover_url = m['cover url']
         genres = ""
-        for g in m['genres']:
-            genres += g + ", "
-        genres = genres[:-2]
+        if 'genres' in m.keys():
+            for g in m['genres']:
+                genres += g + ", "
+            genres = genres[:-2]
+        else:
+            genres = "NA"
         cast = ""
         cast_id = ""
         if 'cast' in m.keys():
@@ -140,7 +144,7 @@ def fetch_series(ids, tag):
             cover_url = m['full-size cover url']
         elif 'cover url' in m.keys():
             cover_url = m['cover url']
-        genres = ""
+        genres = "NA"
         if 'genres' in m.keys():
             for g in m['genres']:
                 genres += g + ", "
@@ -310,9 +314,12 @@ def fetch_streaming_platforms(ids, tag):
             elif 'cover url' in m.keys():
                 cover_url = m['cover url']
             genres = ""
-            for g in m['genres']:
-                genres += g + ", "
-            genres = genres[:-2]
+            if 'genres' in m.keys():
+                for g in m['genres']:
+                    genres += g + ", "
+                genres = genres[:-2]
+            else:
+                genres = "NA"
             cast = ""
             cast_id = ""
             if 'cast' in m.keys():
@@ -391,11 +398,45 @@ def top_series():
     print("Series IDs fetching done")
     fetch_series(ids, 'top_rated')
 
-update = input("Update top rated movies & series(Y/N): ")
+def insert_top1000_movies():
+    print("Inserting top 1000 movies")
+    f = open("top1000_movies_data.csv")
+    reader = csv.reader(f)
+    count = 0
+    for id, kind, title, release, rating, cast, cast_id, genres, duration, budget, worldwide_gross, summary, cover_url in reader:
+        if count == 0:
+            count += 1
+            pass
+        else:
+            db.execute("INSERT INTO movies (wid, tag, kind, title, release, rating, cast, cast_id, genres, duration, budget, worldwide_gross, summary, cover_url) VALUES (:wid, :tag, :kind, :title, :release, :rating, :cast, :cast_id, :genres, :duration, :budget, :worldwide_gross, :summary, :cover_url)", {"wid": id, "tag": "any", "kind": kind, "title": title, "release": release, "rating": rating, "cast": cast, "cast_id": cast_id, "genres": genres, "duration": duration, "budget": budget, "worldwide_gross": worldwide_gross, "summary": summary, "cover_url": cover_url})
+            print(f"{count}. {title} inserted")
+            count += 1
+    db.commit()
+
+def insert_top613_series():
+    print("Inserting top 613 series")
+    f = open("top613_series_data.csv")
+    reader = csv.reader(f)
+    count = 0
+    for id, kind, title, release, rating, cast, cast_id, seasons, episodes, genres, duration, summary, cover_url in reader:
+        if count == 0:
+            count += 1
+            pass
+        else:
+            db.execute("INSERT INTO series (wid, tag, kind, title, release, rating, cast, cast_id, seasons, episodes, genres, duration, summary, cover_url) VALUES (:wid, :tag, :kind, :title, :release, :rating, :cast, :cast_id, :seasons, :episodes, :genres, :duration, :summary, :cover_url)", {"wid": id, "tag": "any", "kind": kind, "title": title, "release": release, "rating": rating, "cast": cast, "cast_id": cast_id, "seasons": seasons, "episodes": episodes, "genres": genres, "duration": duration, "summary": summary, "cover_url": cover_url})
+            print(f"{count}. {title} inserted")
+            count += 1
+    db.commit()
+
+update = input("Insert top 1000 movies, top613 series, top rated movies & series(Y/N): ")
 if update.upper() == 'Y':
     top_series()
     print()
     top_movies()
+    print()
+    insert_top1000_movies()
+    print()
+    insert_top613_series()
     print()
 trending_movies()
 print()
@@ -406,5 +447,6 @@ print()
 upcoming_on_netflix()
 print()
 upcoming_on_amazon()
+
 db.close()
 print("Finished")
