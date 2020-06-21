@@ -126,7 +126,7 @@ def result(query):
     search = f"%{title}%"
     movies = []
     access = []
-    data = db.execute("SELECT * FROM movies WHERE title LIKE :title", {"title": search}).fetchall()
+    data = db.execute("SELECT DISTINCT * FROM movies WHERE title LIKE :title", {"title": search}).fetchall()
     res = ia.search_movie(title)
     if len(data) > 0:
         in_ids = []
@@ -149,7 +149,7 @@ def result(query):
             access.append('imdb')
             print("done")
     elif 'series' in res[0]['kind']:
-        data = db.execute("SELECT * FROM series WHERE title LIKE :title", {"title": search}).fetchall()
+        data = db.execute("SELECT DISTINCT * FROM series WHERE title LIKE :title", {"title": search}).fetchall()
         if len(data) > 0:
             print("series in database")
             movies.append(data[0])
@@ -192,8 +192,8 @@ def watchlist(username, table):
         ratings = []
         for w in watched:
             wid = w.wid
-            mdata = db.execute("SELECT * FROM movies WHERE wid = :wid", {"wid": wid}).fetchall()
-            sdata = db.execute("SELECT * FROM series WHERE wid = :wid", {"wid": wid}).fetchall()
+            mdata = db.execute("SELECT DISTINCT * FROM movies WHERE wid = :wid", {"wid": wid}).fetchall()
+            sdata = db.execute("SELECT DISTINCT * FROM series WHERE wid = :wid", {"wid": wid}).fetchall()
             if len(mdata) > 0:
                 movies.append(mdata[0])
                 ratings.append(w.user_rating)
@@ -217,9 +217,9 @@ def add(id):
         user_rating = request.form.get("user_rating")
         table = request.form.get("status").lower()
         date = str(datetime.datetime.utcnow())
-        data = db.execute("SELECT * FROM movies WHERE wid = :wid", {"wid": id}).fetchall()
+        data = db.execute("SELECT DISTINCT * FROM movies WHERE wid = :wid", {"wid": id}).fetchall()
         if len(data) <= 0:
-            data = db.execute("SELECT * FROM series WHERE wid = :wid", {"wid": id}).fetchall()
+            data = db.execute("SELECT DISTINCT * FROM series WHERE wid = :wid", {"wid": id}).fetchall()
         if len(data) <= 0:
             genres = ""
             for g in m['genres']:
@@ -361,57 +361,61 @@ def profile(username):
                 series.append(s)
                 dates.append(int(s.date[8:10]))
         for m in movies:
-            data = db.execute("SELECT * FROM movies WHERE wid = :wid", {"wid": m.wid}).fetchall()[0]
+            data = db.execute("SELECT DISTINCT * FROM movies WHERE wid = :wid", {"wid": m.wid}).fetchall()[0]
             if data.duration != 'NA':
                 hours += int(data.duration)
             gdata = data['genres'].split(', ')
             for g in gdata:
                 genres.append(g)
         for s in series:
-            data = db.execute("SELECT * FROM series WHERE wid = :wid", {"wid": s.wid}).fetchall()[0]
+            data = db.execute("SELECT DISTINCT * FROM series WHERE wid = :wid", {"wid": s.wid}).fetchall()[0]
             if data.duration != 'NA':
                 hours += int(data.episodes) * int(data.duration)
             gdata = data['genres'].split(', ')
             for g in gdata:
                 genres.append(g)
-        c = dict(Counter(genres))
-        sorted_count = sorted(c.items(), key = lambda x: x[1])
-        counts = OrderedDict(sorted_count)
-        df = pd.DataFrame(counts.items(), columns=['Genre', 'Value'])
-        df['Percent'] = round((df['Value'] / sum(df['Value']))*100).astype(int)
-        fig = plt.figure()
-        plt.barh(range(len(df)), df['Percent'], align = 'center')
-        plt.yticks(range(len(df)), df['Genre'])
-        plt.xlim(0, np.max(df['Percent'])*1.4)
-        for i, v in enumerate(df['Percent']):
-            plt.text(v + 0.5, i, str(v)+"%", color='black')
-        plt.xticks([])
-        plt.box(False)
-        img = BytesIO()
-        fig.savefig(img, format = 'png', bbox_inches = 'tight')
-        img.seek(0)
-        encoded = b64encode(img.getvalue())
+        if len(genres) > 0:
+            c = dict(Counter(genres))
+            sorted_count = sorted(c.items(), key = lambda x: x[1])
+            counts = OrderedDict(sorted_count)
+            df = pd.DataFrame(counts.items(), columns=['Genre', 'Value'])
+            df['Percent'] = round((df['Value'] / sum(df['Value']))*100).astype(int)
+            fig = plt.figure()
+            plt.barh(range(len(df)), df['Percent'], align = 'center')
+            plt.yticks(range(len(df)), df['Genre'])
+            plt.xlim(0, np.max(df['Percent'])*1.4)
+            for i, v in enumerate(df['Percent']):
+                plt.text(v + 0.5, i, str(v)+"%", color='black')
+            plt.xticks([])
+            plt.box(False)
+            img = BytesIO()
+            fig.savefig(img, format = 'png', bbox_inches = 'tight')
+            img.seek(0)
+            encoded = b64encode(img.getvalue())
 
-        d = dict(Counter(dates))
-        sorted_days = sorted(d.items(), key = lambda x: x[1])
-        days = dict(sorted_days)
-        for day in days.keys():
-            matrix[0][day] = days[day]
-        W = matrix.reshape(3, 20)
-        #Z = np.random.randn(3, 20)
-        fig1 = plt.figure(figsize = (11, 2))
-        plt.pcolormesh(W, edgecolors='w', linewidths=5, cmap ='Greens')
-        plt.xticks([])
-        plt.yticks([])
-        plt.box(False)
-        img1 = BytesIO()
-        fig1.savefig(img1, format = 'png', bbox_inches = 'tight')
-        img.seek(0)
-        encoded1 = b64encode(img1.getvalue())
+            d = dict(Counter(dates))
+            sorted_days = sorted(d.items(), key = lambda x: x[1])
+            days = dict(sorted_days)
+            for day in days.keys():
+                matrix[0][day] = days[day]
+            W = matrix.reshape(3, 20)
+            Z = np.random.randn(3, 20)
+            fig1 = plt.figure(figsize = (11, 2))
+            plt.pcolormesh(Z, edgecolors='w', linewidths=5, cmap ='Greens')
+            plt.xticks([])
+            plt.yticks([])
+            plt.box(False)
+            img1 = BytesIO()
+            fig1.savefig(img1, format = 'png', bbox_inches = 'tight')
+            img.seek(0)
+            encoded1 = b64encode(img1.getvalue())
 
-        hours /= 60
-        days = round(hours/24)
-        db.close()
-        return render_template("profile.html", curruser = session["username"], movies = len(movies), series = len(series), hours = round(hours), days = days, img_data = encoded.decode('utf-8'), img1_data = encoded1.decode('utf-8'))
+            hours /= 60
+            days = round(hours/24)
+            db.close()
+            return render_template("profile.html", curruser = session["username"], movies = len(movies), series = len(series), hours = round(hours), days = days, img_data = encoded.decode('utf-8'), img1_data = encoded1.decode('utf-8'), activity = "True")
+        else:
+            db.close()
+            return render_template("profile.html", curruser = session["username"], movies = len(movies), series = len(series), hours = 0, days = 0, activity = "False")
     else:
         return "<script>alert('Please login first'); window.location = 'http://127.0.0.1:5000/login';</script>"
