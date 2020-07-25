@@ -5,17 +5,65 @@
 {% endblock %}
 
 {% block body %}
-  <a href="/">Home</a>
-  <a href="/login">Login</a>
-  <form action="{{ url_for('register') }}" method="post">
-    <div class="form-group">
-      <label for="username">Username</label>
-      <input type="text" name="username" class="form-control" id="username" placeholder="Username">
-      <label for="password">Password</label>
-      <input type="password" name="password" class="form-control" id="password" placeholder="Password">
-      <label for="email">Email</label>
-      <input type="email" name="email" class="form-control" id="email" placeholder="Email">
-    </div>
-    <button type="submit" class="btn btn-primary">Submit</button>
-  </form>
+   <style>
+
+      .box{
+         
+          background-color: black;
+          width:40%;
+          padding: 40px;
+          color: white;
+          text-align: center;
+      }
+      .input{
+          background: none;
+          border: 3px solid darkcyan;
+          margin: 10px;
+          padding: 6px;
+          width: 70%;
+          border-radius: 24px;
+          color: white;
+          text-align: center;
+          transition: 0.3s;
+      }
+      
+      .btn{
+          background: none;
+          border: 3px solid lightgreen; 
+          padding: 10px;
+           border-radius: 24px;
+          width: 40%;
+          margin: 20px;
+          font-weight: bold;
+           }
+      
+      .input:focus{
+          width: 95%;
+          transition: 0.3s;
+          border-color: lightgreen;
+      }
+      
+      .btn:hover{
+          background-color: lightgreen;
+          color: black;
+      }
+       
+       @media only screen and (max-width: 600px) {
+           .box{
+               width: 90%;
+           }
+}
+       </style>
+       
+         <div class="box container">
+            <form  action="{{ url_for('register') }}" method="post" >
+                <input type="text" placeholder="Username" class="input" required>
+                <input type="password" placeholder="Password" class="input" required>
+                <input type="email" name="email" class="input" id="email" placeholder="Email" required>
+                <br>
+                <button type="submit" class="btn">REGISTER</button>
+            </form>
+        </div>
+       
+
 {% endblock %}

@@ -5,7 +5,7 @@
 {% endblock %}
 
 {% block body %}
-  <a href="/">Home</a>
+
   {% if loginstatus == 'True' %}
     <a href="/{{curruser}}/completed">my watch list</a>
     <a href = "/logout">Logout</a>
